@@ -28,21 +28,42 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Create Flutter Project Platform Files
+      - name: Generate Android Platform Files
         working-directory: apps/mobile
         run: |
           flutter create --org org.kiroshi --platforms=android .
 
-      - name: Install Flutter Dependencies
+      - name: Patch Android SDK Versions
         working-directory: apps/mobile
         run: |
-          flutter clean
-          flutter pub get
+          # Set explicit SDK versions so geolocator_android can resolve them
+          APP_GRADLE="android/app/build.gradle"
+
+          # Replace flutter.compileSdkVersion references (Groovy DSL style)
+          sed -i 's/compileSdkVersion flutter\.compileSdkVersion/compileSdkVersion 35/g' "$APP_GRADLE"
+          sed -i 's/compileSdk = flutter\.compileSdkVersion/compileSdk = 35/g' "$APP_GRADLE"
+          sed -i 's/minSdkVersion flutter\.minSdkVersion/minSdkVersion 21/g' "$APP_GRADLE"
+          sed -i 's/minSdk = flutter\.minSdkVersion/minSdk = 21/g' "$APP_GRADLE"
+          sed -i 's/targetSdkVersion flutter\.targetSdkVersion/targetSdkVersion 35/g' "$APP_GRADLE"
+          sed -i 's/targetSdk = flutter\.targetSdkVersion/targetSdk = 35/g' "$APP_GRADLE"
+
+          # Enable AndroidX
+          echo "" >> android/gradle.properties
+          echo "android.useAndroidX=true" >> android/gradle.properties
+          echo "android.enableJetifier=true" >> android/gradle.properties
+
+          echo "=== android/app/build.gradle ==="
+          cat "$APP_GRADLE"
+          echo "=== android/gradle.properties ==="
+          cat android/gradle.properties
+
+      - name: Install Flutter Dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
 
       - name: Build Android Release APK
         working-directory: apps/mobile
-        run: |
-          flutter build apk --release
+        run: flutter build apk --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
