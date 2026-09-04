@@ -28,51 +28,18 @@ jobs:
         with:
           flutter-version: '3.24.x'
           channel: 'stable'
-          cache: true
+          cache: false
 
-      - name: Generate Android Platform Files
-        working-directory: apps/mobile
+      - name: Write local.properties
+        working-directory: apps/mobile/android
         run: |
-          flutter create --org org.kiroshi --platforms=android .
-
-      - name: Patch Android SDK Versions
-        working-directory: apps/mobile
-        run: |
-          # Set explicit SDK versions so geolocator_android can resolve them
-          APP_GRADLE="android/app/build.gradle"
-
-          # Replace flutter.compileSdkVersion references (Groovy DSL style)
-          sed -i 's/compileSdkVersion flutter\.compileSdkVersion/compileSdkVersion 35/g' "$APP_GRADLE"
-          sed -i 's/compileSdk = flutter\.compileSdkVersion/compileSdk = 35/g' "$APP_GRADLE"
-          sed -i 's/minSdkVersion flutter\.minSdkVersion/minSdkVersion 21/g' "$APP_GRADLE"
-          sed -i 's/minSdk = flutter\.minSdkVersion/minSdk = 21/g' "$APP_GRADLE"
-          sed -i 's/targetSdkVersion flutter\.targetSdkVersion/targetSdkVersion 35/g' "$APP_GRADLE"
-          sed -i 's/targetSdk = flutter\.targetSdkVersion/targetSdk = 35/g' "$APP_GRADLE"
-
-          # Enable AndroidX
-          echo "" >> android/gradle.properties
-          echo "android.useAndroidX=true" >> android/gradle.properties
-          echo "android.enableJetifier=true" >> android/gradle.properties
-
-          echo "=== android/app/build.gradle ==="
-          cat "$APP_GRADLE"
+          # Flutter SDK path is needed by the committed app/build.gradle
+          echo "flutter.sdk=$(flutter --version --machine | python3 -c "import sys,json; print(json.load(sys.stdin).get('flutterRoot',''))" 2>/dev/null || dirname $(dirname $(which flutter)))" > local.properties
+          cat local.properties
 
       - name: Install Flutter Dependencies
         working-directory: apps/mobile
         run: flutter pub get
-
-      - name: Patch geolocator_android pub-cache build.gradle
-        run: |
-          # geolocator_android's OWN build.gradle reads flutter.compileSdkVersion
-          # from the Flutter Gradle extension — this fails when the android/ folder
-          # is freshly generated. Patch it in the pub cache to use explicit values.
-          find "$HOME/.pub-cache" -path "*/geolocator_android*/android/build.gradle" | while read f; do
-            echo "Patching: $f"
-            sed -i 's/flutter\.compileSdkVersion/34/g' "$f"
-            sed -i 's/flutter\.minSdkVersion/21/g' "$f"
-            sed -i 's/flutter\.targetSdkVersion/34/g' "$f"
-            cat "$f"
-          done
 
       - name: Build Android Debug APK
         working-directory: apps/mobile
@@ -118,3 +85,4 @@ jobs:
             > **Note:** This is a debug build for testing. Production signing will be added in a future release.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

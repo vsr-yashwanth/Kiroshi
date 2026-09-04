@@ -1,0 +1,63 @@
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterRoot = localProperties.getProperty('flutter.sdk')
+assert flutterRoot != null, "flutter.sdk not set in local.properties. " +
+    "Define location of Flutter SDK with flutter.sdk in the local.properties file."
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
+
+android {
+    namespace "org.kiroshi.kiroshi_mobile"
+
+    // Explicit values — do NOT use flutter.compileSdkVersion here.
+    // Plugin subprojects (e.g. geolocator_android) inherit these via
+    // the evaluationDependsOn(':app') block in the root build.gradle.
+    compileSdkVersion 35
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    defaultConfig {
+        applicationId "org.kiroshi.kiroshi_mobile"
+        minSdkVersion 21
+        targetSdkVersion 35
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+    }
+
+    buildTypes {
+        release {
+            // Use debug signing for now (no keystore required)
+            signingConfig signingConfigs.debug
+        }
+        debug {
+            applicationIdSuffix ".debug"
+        }
+    }
+}
+
+flutter {
+    source '../..'
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+}

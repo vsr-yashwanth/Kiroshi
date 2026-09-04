@@ -41,6 +41,8 @@ dist-ssr/
 build/
 .pub/
 .pub-cache/
+apps/mobile/android/.gradle/
+apps/mobile/android/local.properties
 
 # Databases & Local state
 *.db
