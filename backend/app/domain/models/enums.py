@@ -39,3 +39,29 @@ class LocationFreshness(str, enum.Enum):
     STALE = "STALE"
     UNKNOWN = "UNKNOWN"
 
+
+class RiskLevel(str, enum.Enum):
+    SAFE = "SAFE"
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+
+class RecommendedAction(str, enum.Enum):
+    MONITOR = "MONITOR"
+    REVIEW = "REVIEW"
+    CONTACT_TOURIST = "CONTACT_TOURIST"
+    ESCALATE_FOR_HUMAN_REVIEW = "ESCALATE_FOR_HUMAN_REVIEW"
+
+
+class RiskSignalType(str, enum.Enum):
+    ROUTE_DEVIATION = "ROUTE_DEVIATION"
+    RESTRICTED_ZONE = "RESTRICTED_ZONE"
+    HIGH_RISK_ZONE = "HIGH_RISK_ZONE"
+    PROLONGED_INACTIVITY = "PROLONGED_INACTIVITY"
+    UNUSUAL_SPEED = "UNUSUAL_SPEED"
+    UNUSUAL_MOVEMENT = "UNUSUAL_MOVEMENT"
+    ZONE_EVENT = "ZONE_EVENT"
+
+

@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useLiveStream } from '../services/useLiveStream';
 import { api } from '../services/api';
-import { GeoZone, GeoZoneType } from '../types';
+import { GeoZone, GeoZoneType, LiveTouristPosition } from '../types';
 import { LiveMonitoringMap } from '../components/LiveMonitoringMap';
-import { Radio, Shield, AlertTriangle, Clock, Activity, Plus, RefreshCw, X, CheckCircle2 } from 'lucide-react';
+import { RiskInspectorModal } from '../components/RiskInspectorModal';
+import { Radio, Shield, AlertTriangle, Clock, Activity, Plus, RefreshCw, X, CheckCircle2, ShieldAlert, ChevronRight } from 'lucide-react';
 
 export const LiveMonitoringPage: React.FC = () => {
   const { connected, tourists, recentEvents } = useLiveStream();
   const [zones, setZones] = useState<GeoZone[]>([]);
   const [, setLoadingZones] = useState(true);
   const [selectedTouristId, setSelectedTouristId] = useState<string | null>(null);
+  const [inspectingTourist, setInspectingTourist] = useState<LiveTouristPosition | null>(null);
   const [tripHistory, setTripHistory] = useState<{ latitude: number; longitude: number }[]>([]);
   const [activeTab, setActiveTab] = useState<'tourists' | 'zones' | 'alerts'>('tourists');
   const [showZoneModal, setShowZoneModal] = useState(false);
@@ -180,6 +182,7 @@ export const LiveMonitoringPage: React.FC = () => {
             selectedTouristId={selectedTouristId}
             onSelectTourist={setSelectedTouristId}
             tripHistory={tripHistory}
+            onInspectRisk={(t) => setInspectingTourist(t)}
           />
         </div>
 
@@ -234,6 +237,22 @@ export const LiveMonitoringPage: React.FC = () => {
                 ) : (
                   tourists.map((t) => {
                     const isSelected = t.tourist_id === selectedTouristId;
+                    const getRiskBadge = (lvl?: string) => {
+                      switch (lvl) {
+                        case 'CRITICAL':
+                          return 'bg-red-950 text-red-400 border-red-800 animate-pulse';
+                        case 'HIGH':
+                          return 'bg-amber-950 text-amber-400 border-amber-800';
+                        case 'MEDIUM':
+                          return 'bg-yellow-950 text-yellow-400 border-yellow-800';
+                        case 'LOW':
+                          return 'bg-blue-950 text-blue-400 border-blue-800';
+                        case 'SAFE':
+                        default:
+                          return 'bg-emerald-950 text-emerald-400 border-emerald-800';
+                      }
+                    };
+
                     return (
                       <div
                         key={t.tourist_id}
@@ -271,6 +290,25 @@ export const LiveMonitoringPage: React.FC = () => {
                             <span>In: {t.active_zones.join(', ')}</span>
                           </div>
                         )}
+
+                        {/* Risk Engine Assessment Ribbon */}
+                        <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <ShieldAlert className="w-3.5 h-3.5 text-slate-400" />
+                            <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-semibold ${getRiskBadge(t.risk_level)}`}>
+                              {t.risk_level || 'SAFE'} {t.risk_score != null ? `(${(t.risk_score * 100).toFixed(0)}%)` : ''}
+                            </span>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setInspectingTourist(t);
+                            }}
+                            className="text-[11px] text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5 transition-colors font-medium hover:underline"
+                          >
+                            Explain Risk <ChevronRight className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
                     );
                   })
@@ -465,6 +503,14 @@ export const LiveMonitoringPage: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Risk Assessment & Model Explainability Modal */}
+      {inspectingTourist && (
+        <RiskInspectorModal
+          tourist={inspectingTourist}
+          onClose={() => setInspectingTourist(null)}
+        />
       )}
     </div>
   );

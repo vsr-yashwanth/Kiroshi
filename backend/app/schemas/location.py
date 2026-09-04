@@ -29,6 +29,8 @@ class LocationEventResponse(BaseModel):
     speed: Optional[float] = None
     heading: Optional[float] = None
     freshness: LocationFreshness = LocationFreshness.UNKNOWN
+    risk_level: Optional[str] = None
+    risk_score: Optional[float] = None
     recorded_at: datetime
     received_at: datetime
     created_at: datetime
@@ -46,6 +48,8 @@ class LiveTouristPosition(BaseModel):
     speed: Optional[float] = None
     heading: Optional[float] = None
     freshness: LocationFreshness
+    risk_level: Optional[str] = None
+    risk_score: Optional[float] = None
     recorded_at: datetime
     received_at: datetime
     active_zones: List[str] = Field(default_factory=list)

@@ -62,6 +62,9 @@ export type GeoZoneType = 'SAFE' | 'RESTRICTED' | 'HIGH_RISK' | 'CUSTOM';
 export type ZoneEventType = 'ENTER' | 'EXIT';
 export type LocationFreshness = 'LIVE' | 'RECENT' | 'STALE' | 'UNKNOWN';
 
+export type RiskLevel = 'SAFE' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type RecommendedAction = 'MONITOR' | 'REVIEW' | 'CONTACT_TOURIST' | 'ESCALATE_FOR_HUMAN_REVIEW';
+
 export interface GeoZone {
   id: string;
   name: string;
@@ -83,6 +86,31 @@ export interface ZoneEvent {
   occurred_at: string;
 }
 
+export interface RiskSignalDetail {
+  signal_type: string;
+  score: number;
+  weight: number;
+  contribution: number;
+  raw_value: any;
+  unit: string;
+  description: string;
+}
+
+export interface RiskAssessment {
+  id: string;
+  tourist_id: string;
+  trip_id: string;
+  location_event_id?: string;
+  risk_score: number;
+  risk_level: RiskLevel;
+  confidence: number;
+  contributing_signals: RiskSignalDetail[];
+  explanation: string;
+  recommended_action: RecommendedAction;
+  model_version: string;
+  created_at: string;
+}
+
 export interface LiveTouristPosition {
   tourist_id: string;
   tourist_name: string;
@@ -95,8 +123,11 @@ export interface LiveTouristPosition {
   speed?: number;
   heading?: number;
   freshness: LocationFreshness;
+  risk_level?: RiskLevel;
+  risk_score?: number;
   recorded_at: string;
   received_at: string;
   active_zones: string[];
 }
+
 

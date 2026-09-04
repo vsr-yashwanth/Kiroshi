@@ -1,6 +1,6 @@
-# Database Design — KIROSHI v0.2
+# Database Design — KIROSHI v0.3
 
-> Status: IMPLEMENTED (v0.2)
+> Status: IMPLEMENTED (v0.3)
 
 ---
 
@@ -153,3 +153,30 @@ Immutable audit log of all boundary crossing events (`ENTER` / `EXIT`).
 | `latitude` | DOUBLE PRECISION | NOT NULL | Crossing coordinate latitude |
 | `longitude` | DOUBLE PRECISION | NOT NULL | Crossing coordinate longitude |
 | `occurred_at` | TIMESTAMP WITH TIME ZONE | NOT NULL, DEFAULT now(), INDEX | Transition timestamp |
+
+---
+
+## 4. Risk Engine Schema (v0.3)
+
+### 4.1 `risk_assessments`
+Persists explainable, deterministic risk evaluations computed for tourist telemetry events.
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | UUID | PRIMARY KEY | RFC 4122 v4 UUID |
+| `tourist_id` | UUID | FOREIGN KEY (`users.id` ON DELETE CASCADE), NOT NULL | Evaluated tourist |
+| `trip_id` | UUID | FOREIGN KEY (`trips.id` ON DELETE CASCADE), NOT NULL | Associated active journey |
+| `location_event_id` | UUID | FOREIGN KEY (`location_events.id` ON DELETE SET NULL), NULLABLE | Triggering telemetry event |
+| `risk_score` | FLOAT | NOT NULL | Normalized composite score [0.0, 1.0] |
+| `risk_level` | VARCHAR(50) | NOT NULL, INDEX | SAFE, LOW, MEDIUM, HIGH, CRITICAL |
+| `confidence` | FLOAT | NOT NULL | Data quality metric [0.10, 1.00] |
+| `contributing_signals`| JSONB / TEXT | NOT NULL | Array of signal scores, weights & details |
+| `explanation` | TEXT | NOT NULL | Human-readable operational explanation |
+| `recommended_action` | VARCHAR(50) | NOT NULL | MONITOR, REVIEW, CONTACT_TOURIST, ESCALATE_FOR_HUMAN_REVIEW |
+| `model_version` | VARCHAR(50) | NOT NULL | Evaluator model identifier (e.g. `v0.3-rule-engine`) |
+| `created_at` | TIMESTAMP WITH TIME ZONE | NOT NULL, DEFAULT now() | Evaluation timestamp |
+
+**Indexes & Performance:**
+- `ix_risk_assessments_tourist_created`: B-tree composite index on `(tourist_id, created_at DESC)` for instantaneous retrieval of a tourist's latest risk state.
+- `ix_risk_assessments_trip_created`: B-tree composite index on `(trip_id, created_at DESC)` for chronological timeline rendering.
+- `ix_risk_assessments_level`: B-tree index on `risk_level` for rapid filtering of elevated threats.

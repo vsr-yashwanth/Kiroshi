@@ -1,6 +1,6 @@
-# API Specification — KIROSHI v0.1
+# API Specification — KIROSHI v0.3
 
-> Status: IMPLEMENTED (v0.1) | Base Path: `/api/v1`
+> Status: IMPLEMENTED (v0.3) | Base Path: `/api/v1`
 
 ---
 
@@ -308,8 +308,67 @@ Full-duplex real-time telemetry and geofence alert stream for authority dashboar
 
 - **Access**: Authenticated via Query Parameter `?token=<JWT_TOKEN>` (`AUTHORITY` or `ADMIN`).
 - **Events Streamed**:
-  - `snapshot`: Initial state hydration of all active tourists upon connect.
-  - `location_update`: Real-time GPS movement and freshness indicator.
-  - `zone_event`: Immediate `ENTER` / `EXIT` geofence crossing alerts.
-  - `pong`: Response to client `ping` keepalive.
+  - `INITIAL_SNAPSHOT`: Initial state hydration of all active tourists upon connect.
+  - `LOCATION_UPDATE`: Real-time GPS movement, freshness indicator, and active `risk_level` & `risk_score`.
+  - `ZONE_ENTER` / `ZONE_EXIT`: Immediate geofence crossing alerts.
+  - `RISK_UPDATE`: Real-time explainable risk assessment payload (when subscribed via `?subscribe_risk=true` or client command `SUBSCRIBE_RISK`).
+  - `PONG`: Response to client `PING` keepalive.
+
+---
+
+## 8. Risk Assessment Endpoints (v0.3)
+
+### `GET /api/v1/risk/current/{tourist_id}`
+Returns the most recent persisted explainable risk assessment for a tourist.
+
+- **Access**: The tourist themselves (`TOURIST` with matching ID), `AUTHORITY`, or `ADMIN`.
+- **Responses**:
+  - `200 OK`:
+    ```json
+    {
+      "id": "7b8c2d1e-...",
+      "tourist_id": "c1f72922-...",
+      "trip_id": "e4a219b0-...",
+      "location_event_id": "f5c90a12-...",
+      "risk_score": 0.45,
+      "risk_level": "MEDIUM",
+      "confidence": 0.85,
+      "contributing_signals": [
+        {
+          "signal_type": "HIGH_RISK_ZONE",
+          "score": 1.0,
+          "weight": 0.45,
+          "contribution": 0.45,
+          "raw_value": true,
+          "unit": "boolean",
+          "description": "Active inside high-risk hazard perimeter"
+        }
+      ],
+      "explanation": "Risk evaluated as MEDIUM (0.45): Active location inside a high-risk safety perimeter.",
+      "recommended_action": "REVIEW",
+      "model_version": "v0.3-rule-engine",
+      "created_at": "2026-09-04T12:00:00Z"
+    }
+    ```
+  - `403 Forbidden`: Cross-tourist unauthorized access.
+  - `404 Not Found`: No risk evaluation found for tourist.
+
+### `GET /api/v1/risk/history/{trip_id}`
+Returns the chronological evaluation history of risk scores, signals, and explanations across a trip.
+
+- **Access**: The trip owner tourist, `AUTHORITY`, or `ADMIN`.
+- **Query Parameters**:
+  - `limit`: Integer (default 100, max 1000).
+- **Responses**:
+  - `200 OK`: Array of `RiskAssessmentResponse` records sorted by `created_at DESC`.
+  - `403 Forbidden`: Unauthorized tourist access.
+  - `404 Not Found`: Trip not found.
+
+### `GET /api/v1/risk/active`
+Returns the active fleet risk snapshot across all currently active tourist journeys.
+
+- **Access**: `AUTHORITY` or `ADMIN`.
+- **Responses**:
+  - `200 OK`: Array of `LiveTouristRiskSnapshot` objects containing tourist ID, name, trip ID, trip title, latest risk score, level, confidence, and timestamp.
+  - `403 Forbidden`: Tourist role forbidden.
 
