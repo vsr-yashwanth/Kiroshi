@@ -1,0 +1,11 @@
+[tool.pyrefly]
+python-interpreter-path = ".venv/Scripts/python.exe"
+site-package-path = [".venv/Lib/site-packages"]
+search-path = [".", "backend"]
+infer-with-first-use = false
+
+[tool.pyrefly.errors]
+bad-argument-type = "ignore"
+no-matching-overload = "ignore"
+bad-assignment = "ignore"
+missing-attribute = "ignore"

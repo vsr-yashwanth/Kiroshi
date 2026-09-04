@@ -23,7 +23,7 @@ def get_current_user(
     if not payload:
         raise AuthenticationError("Could not validate credentials")
 
-    user_id_str: str = payload.get("sub")
+    user_id_str: str | None = payload.get("sub")
     if not user_id_str:
         raise AuthenticationError("Malformed token subject")
 

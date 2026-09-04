@@ -57,7 +57,7 @@ class ConnectionManager:
         Isolates client failures: a broken socket is cleanly removed without affecting others.
         """
         data_str = json.dumps(message, default=str)
-        dead_connections: List[Tuple[str, WebSocket]] = []
+        dead_connections: list[tuple[str, WebSocket]] = []
 
         async with self._lock:
             all_connections = [
