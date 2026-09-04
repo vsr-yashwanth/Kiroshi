@@ -6,7 +6,7 @@ import '../../domain/models/trip.dart';
 import '../../core/constants/app_colors.dart';
 
 class LiveTrackingScreen extends StatelessWidget {
-  final Trip trip;
+  final TripModel trip;
 
   const LiveTrackingScreen({Key? key, required this.trip}) : super(key: key);
 

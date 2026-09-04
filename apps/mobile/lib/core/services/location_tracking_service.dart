@@ -53,7 +53,7 @@ class LocationTrackingService {
     await stopTracking();
 
     await _location.changeSettings(
-      accuracy: LocationAccuracy.HIGH,
+      accuracy: LocationAccuracy.high,
       distanceFilter: 10, // Ingest when moved by at least 10 meters (battery-conscious)
     );
 

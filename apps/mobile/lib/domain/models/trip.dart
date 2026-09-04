@@ -1,5 +1,7 @@
 import 'itinerary.dart';
 
+typedef Trip = TripModel;
+
 class TripModel {
   final String id;
   final String touristId;
