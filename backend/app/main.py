@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.core.config import settings
 from backend.app.core.logging import logger
-from backend.app.core.database import Base, engine
+from backend.app.core import database
 from backend.app.core.errors import AppException
 from backend.app.api.v1.router import api_router
 
@@ -14,8 +14,11 @@ from backend.app.api.v1.router import api_router
 async def lifespan(app: FastAPI):
     logger.info("Initializing KIROSHI Backend Platform...")
     # Create tables if not existing (SQLite / Local dev fallback)
-    Base.metadata.create_all(bind=engine)
-    logger.info("Database schemas verified.")
+    try:
+        database.Base.metadata.create_all(bind=database.engine)
+        logger.info("Database schemas verified.")
+    except Exception as exc:
+        logger.warning("Database schema initialization skipped or already handled: %s", exc)
     yield
     logger.info("Shutting down KIROSHI Backend Platform...")
 

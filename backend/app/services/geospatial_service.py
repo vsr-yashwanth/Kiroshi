@@ -52,7 +52,9 @@ class GeospatialService:
         point = shapely.geometry.Point(longitude, latitude)
 
         # If PostgreSQL + PostGIS is the underlying engine and PostGIS is enabled:
-        if not is_sqlite:
+        bind = self.db.get_bind()
+        is_pg = getattr(getattr(bind, "dialect", None), "name", None) == "postgresql"
+        if is_pg and not is_sqlite:
             try:
                 geom_pt = func.ST_SetSRID(func.ST_MakePoint(longitude, latitude), 4326)
                 stmt = select(GeoZone).where(

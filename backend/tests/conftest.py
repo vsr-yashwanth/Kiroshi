@@ -18,6 +18,29 @@ from backend.app.domain.models.user import User
 from backend.app.domain.models.tourist_profile import TouristProfile
 from backend.app.domain.models.enums import UserRole
 
+# Ensure GeoAlchemy2 SQLite fallback is applied for tests
+try:
+    from geoalchemy2 import Geometry
+    from sqlalchemy.ext.compiler import compiles
+    import geoalchemy2.admin.dialects.sqlite as geo_sqlite
+
+    geo_sqlite.after_create = lambda *args, **kwargs: None
+    geo_sqlite.before_create = lambda *args, **kwargs: None
+    geo_sqlite.after_drop = lambda *args, **kwargs: None
+    geo_sqlite.before_drop = lambda *args, **kwargs: None
+    geo_sqlite.reflect_geometry_column = lambda *args, **kwargs: None
+
+    @compiles(Geometry, "sqlite")
+    def compile_geometry_sqlite(type_, compiler, **kw):
+        return "GEOMETRY"
+except ImportError:
+    pass
+
+import shapely.wkt
+import shapely.wkb
+from sqlalchemy import event
+import backend.app.core.database as core_db
+
 # In-memory SQLite engine isolated for each test run
 TEST_DATABASE_URL = "sqlite:///:memory:"
 
@@ -26,42 +49,46 @@ engine = create_engine(
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
+core_db.engine = engine
 
 
-@pytest.fixture(scope="session", autouse=True)
-def setup_sqlite_spatial_udfs():
-    import shapely.wkt
-    import shapely.wkb
-    from sqlalchemy import event
+def as_ewkb(*args):
+    if not args or args[0] is None:
+        return None
+    val = args[0]
+    if isinstance(val, str):
+        if ";" in val:
+            val = val.split(";", 1)[1]
+        try:
+            geom = shapely.wkt.loads(val)
+            return shapely.wkb.dumps(geom, hex=True, srid=4326)
+        except Exception:
+            return val
+    return val
 
-    def as_ewkb(val):
-        if val is None:
-            return None
-        if isinstance(val, str):
-            if ";" in val:
-                val = val.split(";", 1)[1]
-            try:
-                geom = shapely.wkt.loads(val)
-                return shapely.wkb.dumps(geom, hex=True, srid=4326)
-            except Exception:
-                return val
-        return val
 
-    @event.listens_for(engine, "connect")
-    def register_test_sqlite_udfs(dbapi_connection, connection_record):
-        cursor = dbapi_connection.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON")
-        cursor.close()
-        dbapi_connection.create_function("GeomFromEWKT", 1, lambda x: x)
-        dbapi_connection.create_function("GeomFromText", 1, lambda x: x)
-        dbapi_connection.create_function("ST_GeomFromText", 1, lambda x: x)
-        dbapi_connection.create_function("AsEWKB", 1, as_ewkb)
-        dbapi_connection.create_function("ST_AsEWKB", 1, as_ewkb)
-        dbapi_connection.create_function("AsBinary", 1, as_ewkb)
-        dbapi_connection.create_function("ST_AsBinary", 1, as_ewkb)
+@event.listens_for(engine, "connect")
+def register_test_sqlite_udfs(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+    dbapi_connection.create_function("GeomFromEWKT", -1, lambda *args: args[0] if args else None)
+    dbapi_connection.create_function("GeomFromText", -1, lambda *args: args[0] if args else None)
+    dbapi_connection.create_function("ST_GeomFromText", -1, lambda *args: args[0] if args else None)
+    dbapi_connection.create_function("AsEWKB", -1, as_ewkb)
+    dbapi_connection.create_function("ST_AsEWKB", -1, as_ewkb)
+    dbapi_connection.create_function("AsBinary", -1, as_ewkb)
+    dbapi_connection.create_function("ST_AsBinary", -1, as_ewkb)
+    dbapi_connection.create_function("RecoverGeometryColumn", -1, lambda *args: 1)
+    dbapi_connection.create_function("DiscardGeometryColumn", -1, lambda *args: 1)
+    dbapi_connection.create_function("CheckSpatialIndex", -1, lambda *args: None)
+    dbapi_connection.create_function("InitSpatialMetaData", -1, lambda *args: 1)
+    dbapi_connection.create_function("CreateSpatialIndex", -1, lambda *args: 1)
+    dbapi_connection.create_function("DisableSpatialIndex", -1, lambda *args: 1)
 
 
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+core_db.SessionLocal = TestingSessionLocal
 
 
 @pytest.fixture(scope="function")

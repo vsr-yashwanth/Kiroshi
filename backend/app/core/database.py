@@ -39,30 +39,36 @@ if is_sqlite:
         cursor.close()
 
         # Register Spatial UDF fallbacks for environments without SpatiaLite
-        dbapi_connection.create_function("GeomFromEWKT", 1, lambda x: x)
-        dbapi_connection.create_function("GeomFromText", 1, lambda x: x)
-        dbapi_connection.create_function("ST_GeomFromText", 1, lambda x: x)
-        dbapi_connection.create_function("AsEWKB", 1, as_ewkb)
-        dbapi_connection.create_function("ST_AsEWKB", 1, as_ewkb)
-        dbapi_connection.create_function("AsBinary", 1, as_ewkb)
-        dbapi_connection.create_function("ST_AsBinary", 1, as_ewkb)
+        dbapi_connection.create_function("GeomFromEWKT", -1, lambda *args: args[0] if args else None)
+        dbapi_connection.create_function("GeomFromText", -1, lambda *args: args[0] if args else None)
+        dbapi_connection.create_function("ST_GeomFromText", -1, lambda *args: args[0] if args else None)
+        dbapi_connection.create_function("AsEWKB", -1, as_ewkb)
+        dbapi_connection.create_function("ST_AsEWKB", -1, as_ewkb)
+        dbapi_connection.create_function("AsBinary", -1, as_ewkb)
+        dbapi_connection.create_function("ST_AsBinary", -1, as_ewkb)
+        dbapi_connection.create_function("RecoverGeometryColumn", -1, lambda *args: 1)
+        dbapi_connection.create_function("DiscardGeometryColumn", -1, lambda *args: 1)
+        dbapi_connection.create_function("CheckSpatialIndex", -1, lambda *args: None)
+        dbapi_connection.create_function("InitSpatialMetaData", -1, lambda *args: 1)
+        dbapi_connection.create_function("CreateSpatialIndex", -1, lambda *args: 1)
+        dbapi_connection.create_function("DisableSpatialIndex", -1, lambda *args: 1)
 
-    try:
-        from geoalchemy2 import Geometry
-        from sqlalchemy.ext.compiler import compiles
-        import geoalchemy2.admin.dialects.sqlite as geo_sqlite
+try:
+    from geoalchemy2 import Geometry
+    from sqlalchemy.ext.compiler import compiles
+    import geoalchemy2.admin.dialects.sqlite as geo_sqlite
 
-        geo_sqlite.after_create = lambda *args, **kwargs: None
-        geo_sqlite.before_create = lambda *args, **kwargs: None
-        geo_sqlite.after_drop = lambda *args, **kwargs: None
-        geo_sqlite.before_drop = lambda *args, **kwargs: None
-        geo_sqlite.reflect_geometry_column = lambda *args, **kwargs: None
+    geo_sqlite.after_create = lambda *args, **kwargs: None
+    geo_sqlite.before_create = lambda *args, **kwargs: None
+    geo_sqlite.after_drop = lambda *args, **kwargs: None
+    geo_sqlite.before_drop = lambda *args, **kwargs: None
+    geo_sqlite.reflect_geometry_column = lambda *args, **kwargs: None
 
-        @compiles(Geometry, "sqlite")
-        def compile_geometry_sqlite(type_, compiler, **kw):
-            return "GEOMETRY"
-    except ImportError:
-        pass
+    @compiles(Geometry, "sqlite")
+    def compile_geometry_sqlite(type_, compiler, **kw):
+        return "GEOMETRY"
+except ImportError:
+    pass
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, future=True)
 

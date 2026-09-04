@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, status
 from sqlalchemy.orm import Session
 
-from backend.app.core.database import SessionLocal
+from backend.app.core import database
 from backend.app.core.security import decode_access_token
 from backend.app.core.logging import logger
 from backend.app.domain.models.enums import UserRole
@@ -48,7 +48,7 @@ async def authority_websocket_endpoint(
     if not accepted:
         return
 
-    db: Session = SessionLocal()
+    db: Session = database.SessionLocal()
     try:
         # Send initial snapshot of currently active tourists and their latest positions
         service = LocationService(db)
