@@ -13,4 +13,8 @@ class Endpoints {
   static String tripById(String id) => '$baseUrl/trips/$id';
   static String startTrip(String id) => '$baseUrl/trips/$id/start';
   static String stopTrip(String id) => '$baseUrl/trips/$id/stop';
+
+  static const String location = '$baseUrl/location';
+  static const String zones = '$baseUrl/zones';
 }
+

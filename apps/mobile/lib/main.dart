@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'core/constants/app_colors.dart';
 import 'application/auth_state.dart';
 import 'application/trip_state.dart';
+import 'application/location_state.dart';
 import 'presentation/screens/login_screen.dart';
 import 'presentation/screens/trip_list_screen.dart';
 
@@ -20,6 +21,7 @@ class KiroshiApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthState()..initAuth()),
         ChangeNotifierProvider(create: (_) => TripState()),
+        ChangeNotifierProvider(create: (_) => LocationState()..initializePermissions()),
       ],
       child: Consumer<AuthState>(
         builder: (context, authState, _) {
