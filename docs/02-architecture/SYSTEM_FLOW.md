@@ -150,3 +150,50 @@ Telemetry displayed on the Authority Dashboard is classified dynamically based o
 - **Trip Isolation**: Location points cannot be recorded against trips owned by other tourists or trips not currently in `ACTIVE` state.
 - **WebSocket RBAC**: WebSocket connections to `/api/v1/ws/authority` require valid authentication and are restricted to users with `AUTHORITY` or `ADMIN` roles. Unauthorized clients receive close code `1008 Policy Violation`.
 - **Sanitized Telemetry**: WebSocket location frames broadcast minimal operational payloads (coordinates, accuracy, timestamp, trip ID) without broadcasting sensitive identity hashes or medical notes.
+
+---
+
+## 6. v0.4 Emergency Response & Incident Lifecycle Pipeline
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Tourist as Tourist Mobile App
+    participant API as FastAPI /api/v1/incidents
+    participant DB as PostgreSQL (Incidents & Events)
+    participant WS as WebSocket ConnectionManager
+    actor Authority as Authority Dashboard
+    actor Responder as Field Responder
+
+    Tourist->>API: POST /api/v1/incidents/sos (idempotency_key, coordinates)
+    API->>DB: Check idempotency & create Incident (status=DETECTED)
+    API->>DB: Append IncidentEvent (INCIDENT_CREATED)
+    API->>WS: Broadcast INCIDENT_CREATED
+    WS-->>Authority: Display incoming distress beacon
+
+    Authority->>API: POST /api/v1/incidents/{id}/transition (to_status=VERIFYING)
+    API->>DB: Validate state transition & append event
+    API->>WS: Broadcast INCIDENT_STATUS_CHANGED
+
+    Authority->>API: POST /api/v1/incidents/{id}/transition (to_status=VERIFIED)
+    API->>DB: Validate state transition & append event
+    API->>WS: Broadcast INCIDENT_STATUS_CHANGED
+
+    Authority->>API: POST /api/v1/incidents/{id}/assign (responder_id)
+    API->>DB: Persist IncidentAssignment & advance to ASSIGNED
+    API->>DB: In-App Notification -> Responder
+    API->>WS: Broadcast INCIDENT_ASSIGNED
+
+    Responder->>API: POST /api/v1/incidents/{id}/transition (to_status=RESPONDING)
+    API->>DB: Validate state transition & append event
+    API->>WS: Broadcast INCIDENT_STATUS_CHANGED
+
+    Responder->>API: POST /api/v1/incidents/{id}/transition (to_status=RESOLVED, notes)
+    API->>DB: Validate state transition & append event
+    API->>WS: Broadcast INCIDENT_STATUS_CHANGED
+
+    Authority->>API: POST /api/v1/incidents/{id}/transition (to_status=CLOSED)
+    API->>DB: Move to terminal state & append event
+    API->>WS: Broadcast INCIDENT_STATUS_CHANGED
+```
+

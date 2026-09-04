@@ -14,6 +14,10 @@
 | **Privilege Escalation** | Client self-declares role as `ADMIN` or `AUTHORITY` | Role is stored server-side and encoded in cryptographically signed JWT. Modification invalidates token signature. |
 | **Injection Attacks** | SQL injection via API parameters | Parameterized queries enforced through SQLAlchemy ORM 2.0. Direct string query formatting is forbidden. |
 | **Credential Leakage in Repo** | Accidental commit of secrets | Strict `.gitignore` covering `.env`, keys, and tokens. Continuous testing against `.env.example`. |
+| **Incident IDOR / Scope Leakage** | Responder/Tourist attempts to read or mutate unrelated incidents | Strict server-side tenancy: Responders can only view and update incidents assigned to them; Tourists are restricted to their own incidents. |
+| **State Machine Bypassing** | Attacker attempts to jump states (e.g. DETECTED -> RESOLVED) | Authoritative server-side `IncidentStateMachine` rejects invalid and unauthorized transitions with 400/403. |
+| **SOS Triage Exhaustion** | Rapid-fire duplicate SOS submissions overloading dispatchers | Client-generated `idempotency_key` with database uniqueness constraints suppresses duplicate submissions. |
+| **Audit Log Tampering** | Attacker attempts to rewrite historical incident events | `IncidentEvent` table is strictly append-only from the application layer. |
 
 ---
 
@@ -23,3 +27,6 @@
 2. Never store private keys or API secrets in source control.
 3. Keep CORS origins restricted to approved dashboard/mobile domains.
 4. Redact PII in server application logs.
+5. Critical emergency paths (SOS) must remain operational when AI/ML or external notification infrastructure is down.
+6. Incident state machine transitions are strictly authoritative on the server.
+

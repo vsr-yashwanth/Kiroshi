@@ -372,3 +372,111 @@ Returns the active fleet risk snapshot across all currently active tourist journ
   - `200 OK`: Array of `LiveTouristRiskSnapshot` objects containing tourist ID, name, trip ID, trip title, latest risk score, level, confidence, and timestamp.
   - `403 Forbidden`: Tourist role forbidden.
 
+---
+
+## 6. Incident Management & Emergency SOS Endpoints (v0.4)
+
+### `POST /api/v1/incidents/sos`
+Activates an emergency SOS distress beacon. Completely decoupled from AI/ML services and external gateways.
+
+- **Access**: Authenticated `TOURIST`.
+- **Request Body**:
+  ```json
+  {
+    "trip_id": "7b8971f4-3450-424a-9b16-562aef768222",
+    "latitude": 35.0116,
+    "longitude": 135.7681,
+    "accuracy": 4.5,
+    "notes": "Medical emergency on mountain path",
+    "idempotency_key": "sos-1788520000-98231"
+  }
+  ```
+- **Responses**:
+  - `201 Created` / `200 OK` (if deduplicated by idempotency key):
+    ```json
+    {
+      "id": "4da88f05-...",
+      "source": "SOS",
+      "severity": "CRITICAL",
+      "status": "DETECTED",
+      "tourist_id": "c1f72922-...",
+      "trip_id": "7b8971f4-...",
+      "latitude": 35.0116,
+      "longitude": 135.7681,
+      "location_freshness": "LIVE",
+      "idempotency_key": "sos-1788520000-98231",
+      "created_at": "2026-09-04T12:00:00Z"
+    }
+    ```
+  - `401 Unauthorized`: Authentication required.
+  - `403 Forbidden`: Non-tourist role.
+
+### `GET /api/v1/incidents`
+Lists incidents matching operational filters.
+- **Access**:
+  - `AUTHORITY` / `ADMIN`: Access to all active and historical incidents.
+  - `RESPONDER`: Filtered strictly to incidents assigned to the responder.
+  - `TOURIST`: Filtered strictly to incidents created by the tourist.
+- **Query Parameters**:
+  - `status`: Optional filter (e.g. `DETECTED`, `VERIFIED`, `ASSIGNED`, `RESPONDING`, `RESOLVED`, `CLOSED`, `DISMISSED`).
+  - `severity`: Optional filter (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`).
+
+### `GET /api/v1/incidents/{incident_id}`
+Retrieves full details of a specific incident.
+- **Access**: Authorized tourist (own incident), assigned responder, authority, or admin.
+
+### `GET /api/v1/incidents/{incident_id}/timeline`
+Retrieves the chronological audit log of all events and state transitions for an incident.
+- **Access**: Authorized roles.
+- **Responses**:
+  - `200 OK`: Array of `IncidentEventResponse` ordered chronologically by `created_at ASC`.
+
+### `POST /api/v1/incidents/{incident_id}/transition`
+Authoritatively performs a state transition validated by the server-side state machine.
+- **Access**: Role-enforced (`AUTHORITY`, `RESPONDER`, `ADMIN`).
+- **Request Body**:
+  ```json
+  {
+    "to_status": "VERIFYING",
+    "notes": "Dispatcher contacting tourist to assess condition",
+    "resolution_notes": null
+  }
+  ```
+- **Responses**:
+  - `200 OK`: Updated incident.
+  - `400 Bad Request`: Invalid state transition or terminal state rejection.
+  - `403 Forbidden`: Role not authorized for the requested transition.
+
+### `POST /api/v1/incidents/{incident_id}/assign`
+Assigns or reassigns a field responder to an incident.
+- **Access**: `AUTHORITY` or `ADMIN`.
+- **Request Body**:
+  ```json
+  {
+    "responder_id": "3074f4bb-...",
+    "notes": "Deploying closest mountain rescue unit"
+  }
+  ```
+- **Responses**:
+  - `200 OK`: Updated incident with status `ASSIGNED` and preserved assignment history.
+
+### `GET /api/v1/incidents/responders/available`
+Lists all active field responders for operational assignment.
+- **Access**: `AUTHORITY` or `ADMIN`.
+
+---
+
+## 7. In-App Notification Endpoints (v0.4)
+
+### `GET /api/v1/notifications`
+Lists notifications for the authenticated user with unread prioritizing.
+- **Access**: Any authenticated user.
+- **Query Parameters**:
+  - `limit`: Integer (default 20, max 100).
+  - `unread_only`: Boolean (default false).
+
+### `PUT /api/v1/notifications/{notification_id}/read`
+Marks a notification as read.
+- **Access**: Recipient of the notification.
+
+

@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.0] — 2026-09-04
+
+### Added
+- **Incident Domain (`backend/app/domain/models/incident*.py`)**: Dedicated, independent domain models for `Incident`, `IncidentEvent`, and `IncidentAssignment` with Alembic migration `a41d9230e71b`.
+- **Authoritative Incident State Machine (`IncidentStateMachine`)**: Strict 9-state transition machine (`DETECTED`, `VERIFYING`, `VERIFIED`, `ESCALATED`, `ASSIGNED`, `RESPONDING`, `RESOLVED`, `CLOSED`, `DISMISSED`) rejecting invalid state skips and mutations on terminal states.
+- **Role-Aware State Authorization**: Integrated RBAC into state transitions: Tourists cannot resolve or close; Responders can only inspect and transition incidents assigned to them; Authorities can triage, verify, escalate, assign, and close.
+- **Life-Critical Emergency SOS Beacon (`POST /api/v1/incidents/sos`)**: 100% decoupled from AI, ML, CCTV, and external gateways. Captures fresh GPS or gracefully falls back to `UNKNOWN` without blocking incident creation.
+- **SOS Idempotency Protection**: Client-generated `idempotency_key` prevents duplicate incident creation from network retries and double taps.
+- **Append-Only Incident Timeline**: Chronological, immutable `IncidentEvent` audit trail tracking every transition, actor, role, timestamp, and operational reason.
+- **Pluggable Notification Infrastructure**: `NotificationService` with `InAppNotificationProvider`, delivery retries, idempotency, and guaranteed failure isolation (notification failure never rolls back incident creation).
+- **Real-Time WebSocket Incident Pipeline**: Broadcaster emitting `INCIDENT_CREATED`, `INCIDENT_STATUS_CHANGED`, and `INCIDENT_ASSIGNED` over `/api/v1/ws/authority`.
+- **Authority Dashboard Operations Console**: React 19 incident console (`IncidentsPage.tsx` and `IncidentDetailModal.tsx`) featuring real-time queue metrics, severity and status filters, responder assignment modal, and chronological event timeline.
+- **Mobile Tourist SOS Integration**: Deliberate confirmation bottom sheet (`sos_confirmation_sheet.dart`) and emergency SOS entry points in live tracking and trip list screens.
+- **Comprehensive Automated Test Suite**: 16 new automated tests covering state machine transitions, invalid terminal rejection, SOS failure modes, notifications, API access control, and complete end-to-end emergency lifecycle (79/79 total passing).
+
+### Security
+- Anti-IDOR enforcement ensuring field responders can only access and update incidents assigned to them.
+- Terminal state immutability preventing `CLOSED` or `DISMISSED` incidents from being resurrected or modified.
+- Strict isolation guaranteeing that optional service outages (Risk Engine, AI, notification networks) never compromise SOS distress persistence.
+
+---
+
 ## [0.3.0] — 2026-09-04
 
 ### Added
