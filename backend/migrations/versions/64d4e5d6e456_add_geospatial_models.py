@@ -32,7 +32,7 @@ def upgrade() -> None:
         sa.Column('zone_type', sa.Enum('SAFE', 'RESTRICTED', 'HIGH_RISK', 'CUSTOM', name='geozonetype', native_enum=False), nullable=False),
         sa.Column('geom', Geometry(geometry_type='POLYGON', srid=4326, spatial_index=True), nullable=True),
         sa.Column('coordinates_json', sa.Text(), nullable=False),
-        sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.text('1')),
+        sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.true()),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint('id')
