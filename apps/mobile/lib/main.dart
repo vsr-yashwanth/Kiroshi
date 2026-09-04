@@ -7,8 +7,11 @@ import 'application/location_state.dart';
 import 'presentation/screens/login_screen.dart';
 import 'presentation/screens/trip_list_screen.dart';
 
-void main() {
+import 'core/constants/endpoints.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Endpoints.init();
   runApp(const KiroshiApp());
 }
 

@@ -36,44 +36,58 @@ class ApiClient {
     throw MobileAppException(errorMessage, response.statusCode);
   }
 
+  static const Duration _timeout = Duration(seconds: 12);
+
   Future<dynamic> get(String url, {bool requireAuth = true}) async {
     try {
       final headers = await _getHeaders(requireAuth: requireAuth);
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final response = await http
+          .get(Uri.parse(url), headers: headers)
+          .timeout(_timeout);
       return _processResponse(response);
     } catch (e) {
       if (e is MobileAppException) rethrow;
-      throw NetworkException('Network error: $e');
+      throw NetworkException(
+        'Could not connect to server ($url). Please verify that the backend is running and reachable on your Wi-Fi network.',
+      );
     }
   }
 
   Future<dynamic> post(String url, {dynamic body, bool requireAuth = true}) async {
     try {
       final headers = await _getHeaders(requireAuth: requireAuth);
-      final response = await http.post(
-        Uri.parse(url),
-        headers: headers,
-        body: body != null ? jsonEncode(body) : null,
-      );
+      final response = await http
+          .post(
+            Uri.parse(url),
+            headers: headers,
+            body: body != null ? jsonEncode(body) : null,
+          )
+          .timeout(_timeout);
       return _processResponse(response);
     } catch (e) {
       if (e is MobileAppException) rethrow;
-      throw NetworkException('Network error: $e');
+      throw NetworkException(
+        'Could not connect to server ($url). Please verify that the backend is running and reachable on your Wi-Fi network.',
+      );
     }
   }
 
   Future<dynamic> put(String url, {dynamic body, bool requireAuth = true}) async {
     try {
       final headers = await _getHeaders(requireAuth: requireAuth);
-      final response = await http.put(
-        Uri.parse(url),
-        headers: headers,
-        body: body != null ? jsonEncode(body) : null,
-      );
+      final response = await http
+          .put(
+            Uri.parse(url),
+            headers: headers,
+            body: body != null ? jsonEncode(body) : null,
+          )
+          .timeout(_timeout);
       return _processResponse(response);
     } catch (e) {
       if (e is MobileAppException) rethrow;
-      throw NetworkException('Network error: $e');
+      throw NetworkException(
+        'Could not connect to server ($url). Please verify that the backend is running and reachable on your Wi-Fi network.',
+      );
     }
   }
 }

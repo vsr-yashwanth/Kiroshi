@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/endpoints.dart';
 import '../../application/auth_state.dart';
 import 'register_screen.dart';
 import 'trip_list_screen.dart';
@@ -22,6 +23,67 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _showServerDialog() {
+    final controller = TextEditingController(text: Endpoints.baseUrl);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Backend Server URL', style: TextStyle(color: AppColors.textPrimary, fontSize: 18)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Enter your PC\'s Wi-Fi IP address or tunnel URL:',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              style: const TextStyle(color: AppColors.textPrimary),
+              decoration: const InputDecoration(
+                hintText: 'http://192.168.1.9:8000/api/v1',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              children: [
+                ActionChip(
+                  label: const Text('Wi-Fi PC (192.168.1.9)', style: TextStyle(fontSize: 11)),
+                  onPressed: () => controller.text = 'http://192.168.1.9:8000/api/v1',
+                ),
+                ActionChip(
+                  label: const Text('Emulator (10.0.2.2)', style: TextStyle(fontSize: 11)),
+                  onPressed: () => controller.text = 'http://10.0.2.2:8000/api/v1',
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final newUrl = controller.text.trim();
+              if (newUrl.isNotEmpty) {
+                await Endpoints.setBaseUrl(newUrl);
+                if (mounted) setState(() {});
+              }
+              Navigator.pop(ctx);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _submit() async {
@@ -150,6 +212,40 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: const Text(
                       'Don’t have an account? Register',
                       style: TextStyle(color: AppColors.primaryLight),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  InkWell(
+                    onTap: _showServerDialog,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.dns_outlined, size: 14, color: AppColors.primaryLight),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              'Server: ${Endpoints.baseUrl}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.textSecondary,
+                                fontFamily: 'monospace',
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Icon(Icons.edit_outlined, size: 14, color: AppColors.primaryLight),
+                        ],
+                      ),
                     ),
                   ),
                 ],
