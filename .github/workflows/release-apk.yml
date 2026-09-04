@@ -31,7 +31,7 @@ jobs:
       - name: Create Flutter Project Platform Files
         working-directory: apps/mobile
         run: |
-          flutter create --org org.kiroshi .
+          flutter create --org org.kiroshi --platforms=android .
 
       - name: Install Flutter Dependencies
         working-directory: apps/mobile
@@ -41,7 +41,7 @@ jobs:
       - name: Build Android Release APK
         working-directory: apps/mobile
         run: |
-          flutter build apk --release --split-per-abi=false
+          flutter build apk --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
