@@ -1,0 +1,6 @@
+# KIROSHI Command Platform Robots Policy
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://kiroshi.org/sitemap.xml

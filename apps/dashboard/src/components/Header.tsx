@@ -3,12 +3,16 @@ import { Server } from 'lucide-react';
 import { api } from '../services/api';
 import { SystemHealth } from '../types';
 
+import { Breadcrumbs } from './Breadcrumbs';
+
 interface HeaderProps {
   title: string;
   subtitle?: string;
+  breadcrumbs?: { label: string; tabId?: string }[];
+  onNavigate?: (tabId: string) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
+export const Header: React.FC<HeaderProps> = ({ title, subtitle, breadcrumbs, onNavigate }) => {
   const [health, setHealth] = useState<SystemHealth | null>(null);
 
   useEffect(() => {
@@ -34,6 +38,9 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
       }}
     >
       <div>
+        {breadcrumbs && breadcrumbs.length > 0 && (
+          <Breadcrumbs items={breadcrumbs} onNavigate={onNavigate} />
+        )}
         <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>{title}</h1>
         {subtitle && <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{subtitle}</p>}
       </div>

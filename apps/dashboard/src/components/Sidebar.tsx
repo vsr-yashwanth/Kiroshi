@@ -41,7 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange }) => 
       </div>
 
       {/* Navigation Links */}
-      <nav style={{ flex: 1, padding: '1.25rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+      <nav aria-label="Main Navigation" style={{ flex: 1, padding: '1.25rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentTab === item.id;
@@ -49,6 +49,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange }) => 
             <button
               key={item.id}
               onClick={() => onTabChange(item.id)}
+              aria-current={isActive ? 'page' : undefined}
+              aria-label={`Navigate to ${item.label}`}
               style={{
                 display: 'flex',
                 alignItems: 'center',

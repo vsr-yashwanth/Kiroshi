@@ -13,4 +13,17 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    // Remove production source maps for security and performance
+    sourcemap: false,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-icons': ['lucide-react'],
+        },
+      },
+    },
+  },
 })

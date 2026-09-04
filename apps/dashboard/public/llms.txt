@@ -1,0 +1,30 @@
+# KIROSHI: Smart Tourist Safety Monitoring & Incident Response System
+
+> Real-time geospatial telemetry monitoring, multi-signal predictive risk analysis, and automated emergency SOS dispatch platform.
+
+## System Overview
+KIROSHI is an enterprise-grade mission-critical tourist safety and incident response ecosystem designed for municipal authorities, park rangers, emergency responders, and tourists.
+
+## Core Capabilities
+- **Geofence Containment & Tracking**: High-precision polygon geofence monitoring with automatic ENTER/EXIT boundary detection and PostGIS / Shapely spatial evaluation.
+- **Multi-Signal Predictive Risk Engine**: Real-time scoring combining geofence hazards, route deviation meters, speed anomalies, and telemetry freshness into explainable SAFE/LOW/MEDIUM/HIGH/CRITICAL categories.
+- **Emergency Incident State Machine**: Deterministic lifecycle (TRIGGERED -> TRIAGE -> VERIFIED -> DISPATCHED -> RESOLVED / DISMISSED) with role-based dispatch authorization and responder coordination.
+- **Tourist Mobile SOS**: 3-second rapid emergency SOS broadcast featuring client-side fallback and offline survival guidance.
+
+## Architecture
+- **Backend**: FastAPI modular monolith with PostgreSQL 16 + PostGIS 3.4, SQLAlchemy ORM, Alembic migrations, and WebSocket pub/sub.
+- **Authority Dashboard**: React 18, TypeScript, Vite, Tailwind/Vanilla CSS, Lucide icons, responsive dark tactical theme.
+- **Mobile Application**: Flutter cross-platform client with background GPS telemetry collection and emergency UI.
+
+## Main Endpoints
+- `POST /api/v1/auth/login`: Issue role-scoped JWT tokens
+- `POST /api/v1/location`: Telemetry ingestion and live broadcast
+- `POST /api/v1/zones`: Polygon boundary creation and hazard classification
+- `GET /api/v1/risk/active`: Real-time fleet risk snapshot
+- `POST /api/v1/sos`: Tourist emergency SOS activation
+- `GET /api/v1/incidents`: Incident query with status and severity filters
+- `POST /api/v1/incidents/{id}/transition`: State machine transition with audit logging
+
+## Documentation
+- Repository: https://github.com/vsr-yashwanth/Kiroshi
+- System Documentation: https://kiroshi.org/docs
