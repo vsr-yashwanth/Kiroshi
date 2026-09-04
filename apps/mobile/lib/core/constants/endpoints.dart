@@ -37,4 +37,5 @@ class Endpoints {
 
   static String get location => '$baseUrl/location';
   static String get zones => '$baseUrl/zones';
+  static String get sos => '$baseUrl/incidents/sos';
 }

@@ -130,4 +130,96 @@ export interface LiveTouristPosition {
   active_zones: string[];
 }
 
+export type IncidentSource = 'SOS' | 'RISK_ENGINE' | 'AUTHORITY' | 'SYSTEM';
+export type IncidentSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type IncidentStatus =
+  | 'DETECTED'
+  | 'VERIFYING'
+  | 'VERIFIED'
+  | 'ESCALATED'
+  | 'ASSIGNED'
+  | 'RESPONDING'
+  | 'RESOLVED'
+  | 'CLOSED'
+  | 'DISMISSED';
 
+export type IncidentEventType =
+  | 'INCIDENT_CREATED'
+  | 'INCIDENT_VERIFIED'
+  | 'INCIDENT_ESCALATED'
+  | 'INCIDENT_ASSIGNED'
+  | 'RESPONSE_STARTED'
+  | 'INCIDENT_RESOLVED'
+  | 'INCIDENT_CLOSED'
+  | 'INCIDENT_DISMISSED'
+  | 'STATUS_UPDATED';
+
+export type AssignmentStatus = 'ACTIVE' | 'REASSIGNED' | 'RELEASED' | 'COMPLETED';
+
+export interface Incident {
+  id: string;
+  source: IncidentSource;
+  severity: IncidentSeverity;
+  status: IncidentStatus;
+  tourist_id: string;
+  tourist_name?: string;
+  tourist_phone?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  trip_id?: string;
+  trip_title?: string;
+  latitude?: number;
+  longitude?: number;
+  location_freshness: LocationFreshness;
+  assigned_responder_id?: string;
+  assigned_responder_name?: string;
+  risk_assessment_id?: string;
+  risk_score?: number;
+  risk_level?: RiskLevel;
+  notes?: string;
+  idempotency_key?: string;
+  created_at: string;
+  updated_at: string;
+  verified_at?: string;
+  resolved_at?: string;
+  closed_at?: string;
+}
+
+export interface IncidentEvent {
+  id: string;
+  incident_id: string;
+  actor_id: string;
+  actor_name?: string;
+  actor_role: string;
+  event_type: IncidentEventType;
+  from_status?: IncidentStatus;
+  to_status?: IncidentStatus;
+  reason?: string;
+  details?: Record<string, any>;
+  created_at: string;
+}
+
+export interface IncidentAssignment {
+  id: string;
+  incident_id: string;
+  responder_id: string;
+  responder_name?: string;
+  assigned_by_id: string;
+  assigned_by_name?: string;
+  status: AssignmentStatus;
+  notes?: string;
+  assigned_at: string;
+  unassigned_at?: string;
+}
+
+export interface NotificationItem {
+  id: string;
+  recipient_id: string;
+  incident_id?: string;
+  title: string;
+  message: string;
+  channel: string;
+  status: string;
+  is_read: boolean;
+  created_at: string;
+}

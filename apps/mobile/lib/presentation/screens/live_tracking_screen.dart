@@ -4,6 +4,7 @@ import '../../application/location_state.dart';
 import '../../domain/models/location_tracking_state.dart';
 import '../../domain/models/trip.dart';
 import '../../core/constants/app_colors.dart';
+import '../widgets/sos_confirmation_sheet.dart';
 
 class LiveTrackingScreen extends StatelessWidget {
   final TripModel trip;
@@ -25,6 +26,13 @@ class LiveTrackingScreen extends StatelessWidget {
                 Text(trip.title, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
               ],
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.sos_rounded, color: Color(0xFFEF4444), size: 30),
+                tooltip: 'Emergency SOS Beacon',
+                onPressed: () => SosConfirmationSheet.show(context, activeTripId: trip.id),
+              ),
+            ],
           ),
           body: Column(
             children: [
@@ -148,16 +156,36 @@ class LiveTrackingScreen extends StatelessWidget {
                   color: AppColors.surface,
                   border: Border(top: BorderSide(color: AppColors.border)),
                 ),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: locationState.status == TrackingStatus.trackingEnabled
-                          ? AppColors.danger
-                          : AppColors.success,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      height: 46,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFDC2626),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        icon: const Icon(Icons.warning_rounded, color: Colors.white, size: 20),
+                        label: const Text(
+                          'EMERGENCY SOS DISTRESS',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white, letterSpacing: 0.8),
+                        ),
+                        onPressed: () => SosConfirmationSheet.show(context, activeTripId: trip.id),
+                      ),
                     ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: locationState.status == TrackingStatus.trackingEnabled
+                              ? AppColors.danger
+                              : AppColors.success,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
                     onPressed: () {
                       if (locationState.status == TrackingStatus.trackingEnabled) {
                         locationState.stopTracking();

@@ -7,6 +7,7 @@ import { DashboardOverview } from './pages/DashboardOverview';
 import { TouristsPage } from './pages/TouristsPage';
 import { TripsPage } from './pages/TripsPage';
 import { LiveMonitoringPage } from './pages/LiveMonitoringPage';
+import { IncidentsPage } from './pages/IncidentsPage';
 import { TouristDetailModal } from './components/TouristDetailModal';
 import { TripDetailModal } from './components/TripDetailModal';
 import { LoadingSpinner } from './components/LoadingSpinner';
@@ -33,6 +34,8 @@ const DashboardContent: React.FC = () => {
     switch (currentTab) {
       case 'overview':
         return { title: 'Operational Command Overview', subtitle: 'Real-time tourist safety monitoring and incident posture' };
+      case 'incidents':
+        return { title: 'Emergency Incidents & Response Operations', subtitle: 'Active emergency triage, verification, and responder dispatch queue' };
       case 'monitoring':
         return { title: 'Live Geospatial Telemetry & GeoZones', subtitle: 'Real-time WebSocket observation, GIS containment tracking, and incident alerts' };
       case 'tourists':
@@ -60,6 +63,10 @@ const DashboardContent: React.FC = () => {
               onSelectTourist={setSelectedTouristId}
               onSelectTrip={setSelectedTripId}
             />
+          )}
+
+          {currentTab === 'incidents' && (
+            <IncidentsPage />
           )}
 
           {currentTab === 'monitoring' && (

@@ -153,6 +153,82 @@ export const api = {
     });
     return handleResponse(res);
   },
+
+  // Incidents (v0.4)
+  listIncidents: async (status?: string, severity?: string): Promise<any[]> => {
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    if (severity) params.append('severity', severity);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const res = await fetch(`${API_BASE}/incidents${queryString}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  getIncident: async (id: string): Promise<any> => {
+    const res = await fetch(`${API_BASE}/incidents/${id}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  getIncidentTimeline: async (id: string): Promise<any[]> => {
+    const res = await fetch(`${API_BASE}/incidents/${id}/timeline`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  transitionIncident: async (
+    id: string,
+    to_status: string,
+    notes?: string,
+    resolution_notes?: string,
+  ): Promise<any> => {
+    const res = await fetch(`${API_BASE}/incidents/${id}/transition`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ to_status, notes, resolution_notes }),
+    });
+    return handleResponse(res);
+  },
+
+  assignIncident: async (
+    id: string,
+    responder_id: string,
+    notes?: string,
+  ): Promise<any> => {
+    const res = await fetch(`${API_BASE}/incidents/${id}/assign`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ responder_id, notes }),
+    });
+    return handleResponse(res);
+  },
+
+  listAvailableResponders: async (): Promise<any[]> => {
+    const res = await fetch(`${API_BASE}/incidents/responders/available`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  // Notifications (v0.4)
+  listNotifications: async (limit = 20): Promise<any[]> => {
+    const res = await fetch(`${API_BASE}/notifications?limit=${limit}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  markNotificationRead: async (id: string): Promise<any> => {
+    const res = await fetch(`${API_BASE}/notifications/${id}/read`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
 };
 
 

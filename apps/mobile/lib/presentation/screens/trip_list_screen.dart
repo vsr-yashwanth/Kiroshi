@@ -9,6 +9,7 @@ import 'create_trip_screen.dart';
 import 'trip_details_screen.dart';
 import 'profile_screen.dart';
 import 'login_screen.dart';
+import '../widgets/sos_confirmation_sheet.dart';
 
 class TripListScreen extends StatefulWidget {
   const TripListScreen({Key? key}) : super(key: key);
@@ -37,6 +38,11 @@ class _TripListScreenState extends State<TripListScreen> {
         backgroundColor: AppColors.surface,
         title: const Text('My Expeditions', style: TextStyle(color: AppColors.textPrimary)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.sos_rounded, color: Color(0xFFEF4444), size: 28),
+            tooltip: 'Emergency SOS',
+            onPressed: () => SosConfirmationSheet.show(context),
+          ),
           IconButton(
             icon: const Icon(Icons.person_outline, color: AppColors.textPrimary),
             onPressed: () {
