@@ -61,6 +61,19 @@ jobs:
         working-directory: apps/mobile
         run: flutter pub get
 
+      - name: Patch geolocator_android pub-cache build.gradle
+        run: |
+          # geolocator_android's OWN build.gradle reads flutter.compileSdkVersion
+          # from the Flutter Gradle extension — this fails when the android/ folder
+          # is freshly generated. Patch it in the pub cache to use explicit values.
+          find "$HOME/.pub-cache" -path "*/geolocator_android*/android/build.gradle" | while read f; do
+            echo "Patching: $f"
+            sed -i 's/flutter\.compileSdkVersion/34/g' "$f"
+            sed -i 's/flutter\.minSdkVersion/21/g' "$f"
+            sed -i 's/flutter\.targetSdkVersion/34/g' "$f"
+            cat "$f"
+          done
+
       - name: Build Android Debug APK
         working-directory: apps/mobile
         run: flutter build apk --debug
