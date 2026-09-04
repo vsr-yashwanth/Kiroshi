@@ -18,10 +18,11 @@ router = APIRouter()
 async def authority_websocket_endpoint(
     websocket: WebSocket,
     token: Optional[str] = Query(None),
+    subscribe_risk: bool = Query(False),
 ):
     """
     Authenticated WebSocket endpoint for Authority Dashboard live geospatial stream.
-    Streams location updates, GeoZone ENTER/EXIT events, and system heartbeats.
+    Streams location updates, GeoZone ENTER/EXIT events, risk updates (if subscribed), and system heartbeats.
     """
     if not token:
         logger.warning("WebSocket connection attempt missing token query parameter.")
@@ -43,7 +44,7 @@ async def authority_websocket_endpoint(
         return
 
     # Accept connection and register with manager
-    accepted = await ws_manager.connect(websocket, user_id=user_id, role=role)
+    accepted = await ws_manager.connect(websocket, user_id=user_id, role=role, subscribe_risk=subscribe_risk)
     if not accepted:
         return
 
@@ -62,7 +63,7 @@ async def authority_websocket_endpoint(
             })
         )
 
-        # Message receiver loop for heartbeats and keepalives
+        # Message receiver loop for heartbeats and subscriptions
         while True:
             raw_text = await websocket.receive_text()
             try:
@@ -75,6 +76,17 @@ async def authority_websocket_endpoint(
                             "timestamp": datetime.now(timezone.utc).isoformat(),
                         })
                     )
+                elif msg_type == "SUBSCRIBE_RISK":
+                    ws_manager.subscribe_risk(websocket)
+                    await websocket.send_text(
+                        json.dumps({
+                            "type": "SUBSCRIPTION_CONFIRMED",
+                            "channel": "RISK_UPDATE",
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        })
+                    )
+                elif msg_type == "UNSUBSCRIBE_RISK":
+                    ws_manager.unsubscribe_risk(websocket)
             except json.JSONDecodeError:
                 logger.debug(f"Received non-JSON message from client {user_id}: {raw_text}")
                 continue
