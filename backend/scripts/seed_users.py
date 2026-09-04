@@ -1,6 +1,6 @@
 import sys
 import os
-import uuid
+from typing import Any, Dict, List
 from datetime import datetime, timezone, timedelta
 
 # Ensure workspace root is in sys.path
@@ -15,12 +15,12 @@ from backend.app.domain.models.itinerary import Itinerary
 from backend.app.domain.models.enums import UserRole, TripStatus, EmergencyStatus
 
 
-def seed():
+def seed() -> None:
     db = SessionLocal()
     try:
         print("[SEED] Seeding KIROSHI database with demo users and active trip...")
 
-        users_data = [
+        users_data: List[Dict[str, Any]] = [
             {
                 "email": "superadmin@kiroshi.org",
                 "password": "Password123!",
@@ -67,7 +67,7 @@ def seed():
             },
         ]
 
-        created_users = []
+        created_users: List[User] = []
         now = datetime.now(timezone.utc)
 
         for u_data in users_data:
@@ -88,8 +88,8 @@ def seed():
             db.add(user)
             db.flush()
 
-            if "profile" in u_data:
-                prof_data = u_data["profile"]
+            if "profile" in u_data and isinstance(u_data["profile"], dict):
+                prof_data: Dict[str, Any] = u_data["profile"]
                 profile = TouristProfile(
                     user_id=user.id,
                     nationality=prof_data["nationality"],
@@ -100,8 +100,8 @@ def seed():
                 )
                 db.add(profile)
 
-            if "trip" in u_data:
-                trip_data = u_data["trip"]
+            if "trip" in u_data and isinstance(u_data["trip"], dict):
+                trip_data: Dict[str, Any] = u_data["trip"]
                 trip = Trip(
                     tourist_id=user.id,
                     title=trip_data["title"],
@@ -114,7 +114,8 @@ def seed():
                 db.add(trip)
                 db.flush()
 
-                for wp in trip_data["waypoints"]:
+                waypoints: List[Dict[str, Any]] = trip_data.get("waypoints", [])
+                for wp in waypoints:
                     itinerary = Itinerary(
                         trip_id=trip.id,
                         destination_name=wp["name"],
