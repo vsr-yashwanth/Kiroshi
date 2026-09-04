@@ -7,7 +7,7 @@ import os
 class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     PROJECT_NAME: str = "KIROSHI Core Platform"
-    VERSION: str = "0.1.0"
+    VERSION: str = "0.2.0"
     API_V1_STR: str = "/api/v1"
 
     # Security
@@ -17,6 +17,12 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str = "sqlite:///./kiroshi.db"
+
+    # Geospatial & Location Freshness
+    LOCATION_FRESHNESS_LIVE_SECONDS: int = 30
+    LOCATION_FRESHNESS_RECENT_SECONDS: int = 180
+    MAX_GPS_CLOCK_SKEW_SECONDS: int = 300
+    MAX_GPS_AGE_HOURS: int = 24
 
     # CORS
     CORS_ORIGINS: List[str] = [
