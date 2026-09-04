@@ -15,6 +15,7 @@ from backend.app.repositories.location_repository import LocationRepository
 from backend.app.repositories.trip_repository import TripRepository
 from backend.app.repositories.zone_repository import ZoneRepository
 from backend.app.services.geospatial_service import GeospatialService
+from backend.app.services.risk_service import RiskService
 from backend.app.services.websocket_manager import ws_manager
 
 
@@ -25,6 +26,7 @@ class LocationService:
         self.trip_repo = TripRepository(db)
         self.zone_repo = ZoneRepository(db)
         self.geo_service = GeospatialService(db)
+        self.risk_service = RiskService(db)
 
     def calculate_freshness(self, recorded_at: datetime) -> LocationFreshness:
         now = datetime.now(timezone.utc)
@@ -142,8 +144,19 @@ class LocationService:
         # Retrieve currently occupied zones
         current_zone_states = self.zone_repo.get_tourist_current_zones(current_user.id)
         active_zone_names = [s.zone.name for s in current_zone_states if s.zone]
+        active_zone_objects = [s.zone for s in current_zone_states if s.zone]
 
-        # 8. Broadcast to Authority WebSockets
+        # 8. Evaluate and Persist Explainable Risk Assessment (v0.3)
+        risk_assessment = await self.risk_service.evaluate_and_persist(
+            tourist_id=current_user.id,
+            trip=trip,
+            location_event=saved_event,
+            active_zones=active_zone_objects,
+            recent_zone_events=zone_events,
+            freshness=freshness,
+        )
+
+        # 9. Broadcast to Authority WebSockets
         broadcast_payload = {
             "tourist_id": str(current_user.id),
             "tourist_name": current_user.full_name,
@@ -156,6 +169,8 @@ class LocationService:
             "speed": saved_event.speed,
             "heading": saved_event.heading,
             "freshness": freshness.value,
+            "risk_level": risk_assessment.risk_level.value,
+            "risk_score": risk_assessment.risk_score,
             "active_zones": active_zone_names,
             "recorded_at": saved_event.recorded_at.isoformat(),
             "received_at": saved_event.received_at.isoformat(),
@@ -182,6 +197,8 @@ class LocationService:
 
         resp = LocationEventResponse.model_validate(saved_event)
         resp.freshness = freshness
+        resp.risk_level = risk_assessment.risk_level.value
+        resp.risk_score = risk_assessment.risk_score
         return resp
 
     def get_trip_history(
@@ -218,6 +235,10 @@ class LocationService:
             current_zones = self.zone_repo.get_tourist_current_zones(tourist.id)
             active_zone_names = [s.zone.name for s in current_zones if s.zone]
 
+            latest_risk = self.risk_service.risk_repo.get_latest_for_trip(trip.id)
+            risk_level_val = latest_risk.risk_level.value if latest_risk else None
+            risk_score_val = latest_risk.risk_score if latest_risk else None
+
             snapshot.append(
                 LiveTouristPosition(
                     tourist_id=tourist.id,
@@ -231,6 +252,8 @@ class LocationService:
                     speed=e.speed,
                     heading=e.heading,
                     freshness=self.calculate_freshness(e.recorded_at),
+                    risk_level=risk_level_val,
+                    risk_score=risk_score_val,
                     recorded_at=e.recorded_at,
                     received_at=e.received_at,
                     active_zones=active_zone_names,
