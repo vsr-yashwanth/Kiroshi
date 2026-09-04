@@ -1,7 +1,7 @@
 # KIROSHI — Smart Tourist Safety Monitoring & Incident Response System
 
 [![CI](https://github.com/vsr-yashwanth/KIROSHI/actions/workflows/ci.yml/badge.svg)](https://github.com/vsr-yashwanth/KIROSHI/actions)
-[![Milestone](https://img.shields.io/badge/Milestone-v0.2.0--Real--Time--Geospatial-success.svg)](https://github.com/vsr-yashwanth/KIROSHI)
+[![Milestone](https://img.shields.io/badge/Milestone-v0.3.0--Intelligent--Risk--Engine-success.svg)](https://github.com/vsr-yashwanth/KIROSHI)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PostGIS](https://img.shields.io/badge/PostGIS-3.4%2B-336791.svg)](https://postgis.net/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg)](https://fastapi.tiangolo.com/)
@@ -13,17 +13,19 @@
 
 ---
 
-## Current Status: Milestone v0.2.0 — Real-Time Geospatial & Geofencing
+## Current Status: Milestone v0.3.0 — Intelligent Risk Engine
 
-Milestone v0.2 introduces real-time spatial monitoring and geofence safety perimeter tracking to the KIROSHI platform:
+Milestone v0.3 introduces a dedicated, deterministic, explainable risk assessment engine (`v0.3-rule-engine`) to the KIROSHI platform:
 
-- **Real-Time Location Ingestion API**: High-throughput `POST /api/v1/location` endpoint with strict coordinate validation, clock skew guards, horizontal accuracy filtering, and trip ownership verification.
-- **PostGIS Spatial Foundation (PostgreSQL 16 + PostGIS 3.4)**: Native EPSG:4326 Point and Polygon geometries stored in `location_events` and `geo_zones`, accelerated by spatial GIST indexes.
-- **Geofence State Transition Engine**: Edge-triggered polygon containment evaluator using PostGIS `ST_Covers`. Generates discrete `ENTER` and `EXIT` events without alert spamming or oscillation.
-- **Authenticated Authority WebSockets (`/api/v1/ws/authority`)**: Full-duplex real-time streaming with query-token authentication, authority role enforcement, initial state snapshots, bidirectional heartbeats, and fault-isolated fanout.
-- **Live Authority Command Map (React 19 + TypeScript)**: Interactive GIS surveillance dashboard rendering active tourist markers, breadcrumb route trails, color-coded safety zones, live status indicators, and real-time alert feed.
-- **Mobile GPS Tracking Service (Flutter / Dart)**: Clean architecture location service managing permissions, device GPS state machine, adaptive 10m distance filtering for battery efficiency, and real-time telemetry presentation.
-- **Comprehensive Automated Test Suite**: 33 automated tests passing cleanly across unit, spatial queries, geofence state transitions, WebSocket RBAC, and end-to-end v0.2 workflow.
+- **Deterministic Rule Engine (`backend/app/engines/risk/`)**: Transparent weighted scoring model evaluating geodesic route deviation, hazard zone containment, prolonged immobility, anomalous velocity, and geofence state events without black-box machine learning.
+- **Configurable Risk Thresholds**: Centralized policy mapping normalized scores $[0.0, 1.0]$ into five discrete operational tiers: `SAFE`, `LOW`, `MEDIUM`, `HIGH`, and `CRITICAL`.
+- **Natural Language Explainability**: Synthesizes human-readable operational summaries explaining contributing factors for human authority verification.
+- **Multi-Factor Data Confidence**: Formulates observational data quality $[0.10, 1.00]$ based on GPS accuracy, location freshness, trajectory depth, and route availability.
+- **Risk Persistence (`RiskAssessment`)**: SQLAlchemy model with composite spatial/temporal indexes (`ix_risk_assessments_tourist_created`, `ix_risk_assessments_trip_created`) tracking full evaluation history.
+- **Risk REST Endpoints**: Strict RBAC endpoints (`/api/v1/risk/current/{tourist_id}`, `/api/v1/risk/history/{trip_id}`, `/api/v1/risk/active`) preventing cross-tourist data leakage.
+- **Real-Time WebSocket Integration**: Selective risk event broadcast (`RISK_UPDATE`) triggered upon meaningful state transitions, delivered to subscribed authority consoles.
+- **Authority Risk Inspector Drawer**: Interactive React 19 UI component featuring real-time risk scores, animated hazard halos, confidence gauges, signal breakdowns, and historical risk timeline.
+- **Comprehensive Automated Test Suite**: 63 automated tests passing cleanly across unit, boundary thresholds, determinism over 100 runs, API RBAC, and complete v0.3 end-to-end workflow (63/63 total passing).
 
 ---
 

@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] — 2026-09-04
+
+### Added
+- **Intelligent Risk Engine Domain (`backend/app/engines/risk/`)**: Created modular, deterministic rule engine (`v0.3-rule-engine`) evaluating composite risk scores ($[0.0, 1.0]$) from real-time spatial and behavioral telemetry.
+- **Route Deviation Evaluator**: Point-to-segment geodesic cross-track distance mathematics projecting tourist positions against itinerary polyline sequences with configurable tolerance tiers.
+- **Hazard & Regulatory Zone Evaluators**: Evaluates containment within PostGIS `HIGH_RISK` natural hazards and `RESTRICTED` legal zones.
+- **Inactivity Evaluator**: Multi-ping trajectory analyzer detecting prolonged stationary immobility ($\le 15\text{m}$) over 30-minute and 60-minute thresholds.
+- **Movement Speed Evaluator**: Flags excessive velocity exceeding transport modality tolerances.
+- **Natural Language Risk Explainer**: Generates operational summaries articulating contributing hazards for human verification.
+- **Multi-Factor Data Confidence Metric**: Calculates observational confidence ($[0.10, 1.00]$) based on GPS accuracy, location freshness, trajectory depth, and route context.
+- **Risk Persistence Model (`RiskAssessment`)**: Added SQLAlchemy model and Alembic migration (`f2ae5b201aa7`) with composite indexes on `(tourist_id, created_at DESC)` and `(trip_id, created_at DESC)`.
+- **Risk REST Endpoints**: Added `GET /api/v1/risk/current/{tourist_id}`, `GET /api/v1/risk/history/{trip_id}`, and `GET /api/v1/risk/active` with strict IDOR protections.
+- **Real-Time Risk Broadcasting**: Selective WebSocket event propagation (`RISK_UPDATE`) triggered upon meaningful state transitions, delivered to subscribed dispatch consoles.
+- **Authority Dashboard Risk Inspector**: Interactive modal drawer (`RiskInspectorModal.tsx`) with real-time risk gauges, contributing signal breakdowns, confidence scores, and historical timeline.
+- **Automated Test Suite**: Added 30 new tests covering scenarios A through H, threshold boundaries, 100-run determinism, API RBAC, and complete v0.3 end-to-end integration workflow (63/63 passing).
+- **Technical Documentation**: Added `RISK_ENGINE.md` and `ML.md` to `docs/05-intelligence/`, detailing scoring formulas, thresholds, confidence, and roadmap.
+
+### Security
+- Enforced strict IDOR protection preventing tourists from querying other tourists' risk assessments or history.
+- Restricted system-wide active risk snapshot endpoints and WebSocket risk subscriptions strictly to `AUTHORITY` and `ADMIN` roles.
+
+---
+
 ## [0.2.0] — 2026-09-04
 
 ### Added

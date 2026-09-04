@@ -1,6 +1,6 @@
 # Technical Debt Registry — KIROSHI
 
-> Status: UPDATED (v0.2 Tracking)
+> Status: UPDATED (v0.3 Tracking)
 
 ---
 
@@ -39,3 +39,10 @@
 - **Why it exists**: Scoped explicitly to milestone v0.5 (Offline-First Synchronization).
 - **Proposed Solution**: Implement drift-tolerant local SQLite sync engine in v0.5.
 - **Priority**: Scheduled for v0.5.
+
+### TD-006: Background Periodic Audit for Silent Transmitters
+- **Problem**: Inactivity risk is currently evaluated on incoming telemetry ingestion and on-demand query. If a tourist stops transmitting completely, risk evaluation does not continuously tick in the background without a new ping or dashboard refresh.
+- **Impact**: Operators see staleness indicator immediately, but dedicated background immobility escalation requires a background scheduler.
+- **Why it exists**: Scoped to avoid premature distributed worker infrastructure in v0.3 modular monolith.
+- **Proposed Solution**: Introduce background heartbeat evaluator in v0.4 emergency orchestration loop.
+- **Priority**: Medium (Scheduled for v0.4).
