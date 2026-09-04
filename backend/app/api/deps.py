@@ -60,3 +60,8 @@ def require_role(*allowed_roles: UserRole) -> Callable[[User], User]:
         return current_user
 
     return role_checker
+
+
+require_authority_or_admin = require_role(UserRole.AUTHORITY, UserRole.ADMIN)
+require_responder_or_admin = require_role(UserRole.RESPONDER, UserRole.ADMIN)
+

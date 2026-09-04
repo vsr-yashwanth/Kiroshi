@@ -110,7 +110,14 @@ class ConnectionManager:
             except Exception as e:
                 logger.warning(f"Error sending risk update to subscriber: {e}")
                 self._risk_subscribers.discard(ws)
+    async def broadcast_incident_event(self, event_type: str, payload: Dict[str, Any]):
+        await self.broadcast_json({
+            "type": f"INCIDENT_{event_type}",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "data": payload,
+        })
 
 
 # Global singleton manager instance
 ws_manager = ConnectionManager()
+

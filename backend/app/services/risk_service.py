@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from backend.app.core.logging import logger
 from backend.app.domain.models.enums import (
     LocationFreshness,
+    RecommendedAction,
     RiskLevel,
     TripStatus,
     UserRole,
@@ -154,6 +155,18 @@ class RiskService:
             logger.info(
                 f"Risk update broadcast: tourist={tourist_id}, level={level_str}, score={saved.risk_score}"
             )
+
+        # 9. Phase 15: Signal incident detection if critical risk threshold reached
+        if (
+            saved.risk_level == RiskLevel.CRITICAL
+            or saved.recommended_action == RecommendedAction.ESCALATE_FOR_HUMAN_REVIEW
+        ):
+            try:
+                from backend.app.services.incident_service import IncidentService
+                incident_svc = IncidentService(self.db)
+                await incident_svc.create_from_risk(saved)
+            except Exception as e:
+                logger.error(f"Error creating incident from risk evaluation: {e}")
 
         return saved
 
