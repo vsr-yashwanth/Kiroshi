@@ -1,20 +1,26 @@
 import uuid
-from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session
+from datetime import datetime, timezone
+
 from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
 
 from backend.app.core.logging import logger
-from backend.app.domain.models.user import User
-from backend.app.domain.models.trip import Trip
-from backend.app.domain.models.location_event import LocationEvent
+from backend.app.domain.models.enums import (
+    LocationFreshness,
+    RiskLevel,
+    TripStatus,
+    UserRole,
+)
 from backend.app.domain.models.geo_zone import GeoZone
-from backend.app.domain.models.zone_event import ZoneEvent
+from backend.app.domain.models.location_event import LocationEvent
 from backend.app.domain.models.risk_assessment import RiskAssessment
-from backend.app.domain.models.enums import UserRole, RiskLevel, LocationFreshness, TripStatus
+from backend.app.domain.models.trip import Trip
+from backend.app.domain.models.user import User
+from backend.app.domain.models.zone_event import ZoneEvent
 from backend.app.engines.risk.config import RiskConfig
 from backend.app.engines.risk.evaluator import RiskEvaluator
-from backend.app.repositories.risk_repository import RiskRepository
 from backend.app.repositories.location_repository import LocationRepository
+from backend.app.repositories.risk_repository import RiskRepository
 from backend.app.repositories.trip_repository import TripRepository
 from backend.app.repositories.zone_repository import ZoneRepository
 from backend.app.schemas.risk import LiveTouristRiskSnapshot
@@ -34,8 +40,8 @@ class RiskService:
         tourist_id: uuid.UUID,
         trip: Trip,
         location_event: LocationEvent,
-        active_zones: List[GeoZone],
-        recent_zone_events: Optional[List[ZoneEvent]] = None,
+        active_zones: list[GeoZone],
+        recent_zone_events: list[ZoneEvent] | None = None,
         freshness: LocationFreshness = LocationFreshness.LIVE,
     ) -> RiskAssessment:
         # 1. Gather itinerary waypoints (ordered by sequence_order)
@@ -107,9 +113,10 @@ class RiskService:
         if prev_assessment is None:
             if saved.risk_level != RiskLevel.SAFE or saved.risk_score > 0.0:
                 is_meaningful = True
-        elif prev_assessment.risk_level != saved.risk_level:
-            is_meaningful = True
-        elif abs(saved.risk_score - prev_assessment.risk_score) >= RiskConfig.RISK_DELTA_BROADCAST_THRESHOLD:
+        elif (
+            prev_assessment.risk_level != saved.risk_level
+            or abs(saved.risk_score - prev_assessment.risk_score) >= RiskConfig.RISK_DELTA_BROADCAST_THRESHOLD
+        ):
             is_meaningful = True
         else:
             curr_signal_types = {s.get("signal_type") for s in (saved.contributing_signals or []) if isinstance(s, dict)}
@@ -118,23 +125,34 @@ class RiskService:
                 is_meaningful = True
 
         if is_meaningful:
+            level_str = saved.risk_level.value if hasattr(saved.risk_level, "value") else str(saved.risk_level)
+            action_str = (
+                saved.recommended_action.value
+                if hasattr(saved.recommended_action, "value")
+                else str(saved.recommended_action)
+            )
+            assessed_time_str = (
+                saved.created_at.isoformat()
+                if saved.created_at
+                else datetime.now(timezone.utc).isoformat()
+            )
             broadcast_payload = {
                 "assessment_id": str(saved.id),
                 "tourist_id": str(tourist_id),
                 "trip_id": str(trip.id),
                 "trip_title": trip.title,
                 "risk_score": saved.risk_score,
-                "risk_level": saved.risk_level.value,
+                "risk_level": level_str,
                 "confidence": saved.confidence,
                 "explanation": saved.explanation,
-                "recommended_action": saved.recommended_action.value,
+                "recommended_action": action_str,
                 "contributing_signals": saved.contributing_signals,
                 "model_version": saved.model_version,
-                "assessed_at": saved.created_at.isoformat(),
+                "assessed_at": assessed_time_str,
             }
             await ws_manager.broadcast_risk_update(broadcast_payload)
             logger.info(
-                f"Risk update broadcast: tourist={tourist_id}, level={saved.risk_level.value}, score={saved.risk_score}"
+                f"Risk update broadcast: tourist={tourist_id}, level={level_str}, score={saved.risk_score}"
             )
 
         return saved
@@ -143,7 +161,7 @@ class RiskService:
         self,
         current_user: User,
         tourist_id: uuid.UUID,
-    ) -> Optional[RiskAssessment]:
+    ) -> RiskAssessment | None:
         # RBAC: Tourist can only query own risk
         if current_user.role == UserRole.TOURIST and current_user.id != tourist_id:
             raise HTTPException(
@@ -157,7 +175,7 @@ class RiskService:
         current_user: User,
         trip_id: uuid.UUID,
         limit: int = 100,
-    ) -> List[RiskAssessment]:
+    ) -> list[RiskAssessment]:
         trip = self.trip_repo.get(trip_id)
         if not trip:
             raise HTTPException(
@@ -177,7 +195,7 @@ class RiskService:
     def get_active_tourists_risk_snapshot(
         self,
         current_user: User,
-    ) -> List[LiveTouristRiskSnapshot]:
+    ) -> list[LiveTouristRiskSnapshot]:
         # RBAC: Authority or Admin only
         if current_user.role not in [UserRole.AUTHORITY, UserRole.ADMIN]:
             raise HTTPException(

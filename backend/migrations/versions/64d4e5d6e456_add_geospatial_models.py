@@ -5,17 +5,17 @@ Revises: 9e6815f24dd5
 Create Date: 2026-09-04 11:46:11.555763
 
 """
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from geoalchemy2 import Geometry
 
 # revision identifiers, used by Alembic.
 revision: str = '64d4e5d6e456'
-down_revision: Union[str, None] = '9e6815f24dd5'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = '9e6815f24dd5'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

@@ -59,6 +59,7 @@ class RiskAssessment(UUIDModel):
     location_event: Mapped[Optional["LocationEvent"]] = relationship("LocationEvent")
 
     __table_args__ = (
+        Index("ix_risk_assessments_created_at", "created_at"),
         Index("idx_risk_assessments_tourist_created", "tourist_id", "created_at"),
         Index("idx_risk_assessments_trip_created", "trip_id", "created_at"),
     )
