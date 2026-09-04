@@ -19,6 +19,10 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    conn = op.get_bind()
+    if conn.dialect.name == 'postgresql':
+        op.execute(sa.text("CREATE EXTENSION IF NOT EXISTS postgis;"))
+
     # 1. Create geo_zones
     op.create_table(
         'geo_zones',
