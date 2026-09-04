@@ -33,8 +33,10 @@ jobs:
       - name: Write local.properties
         working-directory: apps/mobile/android
         run: |
-          # Flutter SDK path is needed by the committed app/build.gradle
-          echo "flutter.sdk=$(flutter --version --machine | python3 -c "import sys,json; print(json.load(sys.stdin).get('flutterRoot',''))" 2>/dev/null || dirname $(dirname $(which flutter)))" > local.properties
+          # Flutter SDK root is two levels above the flutter binary
+          FLUTTER_SDK=$(dirname $(dirname $(which flutter)))
+          echo "flutter.sdk=${FLUTTER_SDK}" > local.properties
+          echo "sdk.dir=${ANDROID_SDK_ROOT}" >> local.properties
           cat local.properties
 
       - name: Install Flutter Dependencies

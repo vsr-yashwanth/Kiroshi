@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:geolocator/geolocator.dart';
+import 'package:location/location.dart';
 import '../storage/token_storage.dart';
 import '../constants/endpoints.dart';
 import '../../domain/models/location_tracking_state.dart';
@@ -9,8 +9,9 @@ import '../../domain/models/location_tracking_state.dart';
 class LocationTrackingService {
   final TokenStorage _tokenStorage;
   final http.Client _httpClient;
+  final Location _location = Location();
 
-  StreamSubscription<Position>? _positionStreamSub;
+  StreamSubscription<LocationData>? _positionStreamSub;
   String? _activeTripId;
 
   LocationTrackingService({
@@ -20,20 +21,23 @@ class LocationTrackingService {
         _httpClient = httpClient ?? http.Client();
 
   Future<TrackingStatus> checkAndRequestPermissions() async {
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    bool serviceEnabled = await _location.serviceEnabled();
     if (!serviceEnabled) {
-      return TrackingStatus.locationUnavailable;
+      serviceEnabled = await _location.requestService();
+      if (!serviceEnabled) {
+        return TrackingStatus.locationUnavailable;
+      }
     }
 
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
+    PermissionStatus permission = await _location.hasPermission();
+    if (permission == PermissionStatus.denied) {
+      permission = await _location.requestPermission();
+      if (permission == PermissionStatus.denied) {
         return TrackingStatus.permissionDenied;
       }
     }
 
-    if (permission == LocationPermission.deniedForever) {
+    if (permission == PermissionStatus.deniedForever) {
       return TrackingStatus.permissionDenied;
     }
 
@@ -48,23 +52,23 @@ class LocationTrackingService {
     _activeTripId = tripId;
     await stopTracking();
 
-    const locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.high,
+    await _location.changeSettings(
+      accuracy: LocationAccuracy.HIGH,
       distanceFilter: 10, // Ingest when moved by at least 10 meters (battery-conscious)
     );
 
-    _positionStreamSub = Geolocator.getPositionStream(
-      locationSettings: locationSettings,
-    ).listen(
-      (Position position) async {
+    _positionStreamSub = _location.onLocationChanged.listen(
+      (LocationData position) async {
         final point = LocationPoint(
-          latitude: position.latitude,
-          longitude: position.longitude,
-          accuracy: position.accuracy,
-          altitude: position.altitude,
-          speed: position.speed,
-          heading: position.heading,
-          recordedAt: position.timestamp,
+          latitude: position.latitude ?? 0.0,
+          longitude: position.longitude ?? 0.0,
+          accuracy: position.accuracy ?? 0.0,
+          altitude: position.altitude ?? 0.0,
+          speed: position.speed ?? 0.0,
+          heading: position.heading ?? 0.0,
+          recordedAt: position.time != null
+              ? DateTime.fromMillisecondsSinceEpoch(position.time!.toInt())
+              : DateTime.now(),
         );
 
         onLocationCaptured(point);
