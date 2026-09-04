@@ -32,23 +32,6 @@ jobs:
         working-directory: apps/mobile
         run: |
           flutter create --org org.kiroshi --platforms=android .
-          # Ensure subprojects and plugins receive compileSdk and targetSdk configuration
-          echo "" >> android/build.gradle
-          echo "subprojects {" >> android/build.gradle
-          echo "    afterEvaluate { project ->" >> android/build.gradle
-          echo "        if (project.hasProperty('android')) {" >> android/build.gradle
-          echo "            project.android {" >> android/build.gradle
-          echo "                if (namespace == null) {" >> android/build.gradle
-          echo "                    namespace project.group" >> android/build.gradle
-          echo "                }" >> android/build.gradle
-          echo "                compileSdkVersion 34" >> android/build.gradle
-          echo "                defaultConfig {" >> android/build.gradle
-          echo "                    targetSdkVersion 34" >> android/build.gradle
-          echo "                }" >> android/build.gradle
-          echo "            }" >> android/build.gradle
-          echo "        }" >> android/build.gradle
-          echo "    }" >> android/build.gradle
-          echo "}" >> android/build.gradle
 
       - name: Install Flutter Dependencies
         working-directory: apps/mobile
