@@ -29,7 +29,7 @@ export function useLiveStream() {
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/api/v1/ws/authority?token=${encodeURIComponent(token)}`;
+    const wsUrl = `${protocol}//${host}/api/v1/ws/authority?token=${encodeURIComponent(token)}&subscribe_risk=true`;
 
     try {
       const ws = new WebSocket(wsUrl);
@@ -94,6 +94,25 @@ export function useLiveStream() {
               recentEvents: [zEvent, ...prev.recentEvents.slice(0, 49)],
               lastUpdate: now,
             }));
+          } else if (message.type === 'RISK_UPDATE') {
+            const riskData = message.data;
+            setState((prev) => {
+              const idx = prev.tourists.findIndex((t) => t.tourist_id === riskData.tourist_id);
+              if (idx >= 0) {
+                const newTourists = [...prev.tourists];
+                newTourists[idx] = {
+                  ...newTourists[idx],
+                  risk_level: riskData.risk_level,
+                  risk_score: riskData.risk_score,
+                };
+                return {
+                  ...prev,
+                  tourists: newTourists,
+                  lastUpdate: now,
+                };
+              }
+              return prev;
+            });
           }
         } catch (err) {
           console.error('Error parsing live WebSocket message:', err);

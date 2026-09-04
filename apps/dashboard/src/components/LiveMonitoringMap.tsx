@@ -8,6 +8,7 @@ interface LiveMonitoringMapProps {
   selectedTouristId: string | null;
   onSelectTourist: (touristId: string | null) => void;
   tripHistory?: { latitude: number; longitude: number }[];
+  onInspectRisk?: (tourist: LiveTouristPosition) => void;
 }
 
 export const LiveMonitoringMap: React.FC<LiveMonitoringMapProps> = ({
@@ -16,6 +17,7 @@ export const LiveMonitoringMap: React.FC<LiveMonitoringMapProps> = ({
   selectedTouristId,
   onSelectTourist,
   tripHistory = [],
+  onInspectRisk,
 }) => {
   const [zoom, setZoom] = useState(1);
   const [centerOffset, setCenterOffset] = useState({ x: 0, y: 0 });
@@ -93,6 +95,22 @@ export const LiveMonitoringMap: React.FC<LiveMonitoringMapProps> = ({
       case 'STALE':
       default:
         return '#64748b';
+    }
+  };
+
+  const getRiskColor = (level?: string) => {
+    switch (level) {
+      case 'CRITICAL':
+        return '#ef4444';
+      case 'HIGH':
+        return '#f97316';
+      case 'MEDIUM':
+        return '#eab308';
+      case 'LOW':
+        return '#3b82f6';
+      case 'SAFE':
+      default:
+        return '#10b981';
     }
   };
 
@@ -271,6 +289,8 @@ export const LiveMonitoringMap: React.FC<LiveMonitoringMapProps> = ({
             const pos = project(t.latitude, t.longitude);
             const isSelected = t.tourist_id === selectedTouristId;
             const freshnessColor = getFreshnessColor(t.freshness);
+            const riskColor = t.risk_level ? getRiskColor(t.risk_level) : freshnessColor;
+            const isElevatedRisk = t.risk_level === 'HIGH' || t.risk_level === 'CRITICAL';
 
             return (
               <g
@@ -288,22 +308,27 @@ export const LiveMonitoringMap: React.FC<LiveMonitoringMapProps> = ({
                 />
 
                 {/* Pulsing Live Halo */}
-                {t.freshness === 'LIVE' && (
+                {t.freshness === 'LIVE' && !isElevatedRisk && (
                   <circle r="18" fill="none" stroke={freshnessColor} strokeWidth="1.5" className="animate-ping opacity-60" />
+                )}
+
+                {/* Elevated Risk Alarm Halo */}
+                {isElevatedRisk && (
+                  <circle r="22" fill="none" stroke={riskColor} strokeWidth="2.5" className="animate-ping opacity-90" />
                 )}
 
                 {/* Selection Highlight */}
                 {isSelected && (
-                  <circle r="22" fill="none" stroke="#38bdf8" strokeWidth="2.5" strokeDasharray="3 3" />
+                  <circle r="24" fill="none" stroke="#38bdf8" strokeWidth="2.5" strokeDasharray="3 3" />
                 )}
 
                 {/* Marker Body */}
-                <circle r="12" fill="#0f172a" stroke={freshnessColor} strokeWidth="2.5" className="drop-shadow-lg" />
+                <circle r="12" fill="#0f172a" stroke={riskColor} strokeWidth="2.5" className="drop-shadow-lg" />
 
                 {/* Direction Heading Arrow (if available) */}
                 {t.heading !== null && t.heading !== undefined && (
                   <g transform={`rotate(${t.heading})`}>
-                    <polygon points="0,-16 -4,-11 4,-11" fill={freshnessColor} />
+                    <polygon points="0,-16 -4,-11 4,-11" fill={riskColor} />
                   </g>
                 )}
 
@@ -341,7 +366,7 @@ export const LiveMonitoringMap: React.FC<LiveMonitoringMapProps> = ({
                     fontWeight="500"
                     className="pointer-events-none select-none font-sans"
                   >
-                    {t.tourist_name.split(' ')[0]}
+                    {t.tourist_name.split(' ')[0]} {t.risk_level ? `(${t.risk_level})` : ''}
                   </text>
                 </g>
               </g>
@@ -356,11 +381,20 @@ export const LiveMonitoringMap: React.FC<LiveMonitoringMapProps> = ({
           {(() => {
             const t = tourists.find((item) => item.tourist_id === selectedTouristId);
             if (!t) return null;
+            const rColor = getRiskColor(t.risk_level);
+
             return (
               <div>
                 <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-cyan-950 border border-cyan-500 flex items-center justify-center font-bold text-cyan-400 text-xs">
+                    <div
+                      className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs border"
+                      style={{
+                        backgroundColor: `${rColor}20`,
+                        borderColor: rColor,
+                        color: rColor,
+                      }}
+                    >
                       {t.tourist_name.charAt(0)}
                     </div>
                     <div>
@@ -380,6 +414,23 @@ export const LiveMonitoringMap: React.FC<LiveMonitoringMapProps> = ({
                     {t.freshness}
                   </span>
                 </div>
+
+                {/* Risk Badge in Card */}
+                {t.risk_level && (
+                  <div className="mb-2 p-2 rounded-lg bg-white/5 border border-white/10 flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Safety Risk</span>
+                    <span
+                      className="text-xs font-bold font-mono px-2 py-0.5 rounded border uppercase"
+                      style={{
+                        color: rColor,
+                        borderColor: `${rColor}50`,
+                        backgroundColor: `${rColor}15`,
+                      }}
+                    >
+                      {t.risk_level} ({t.risk_score != null ? t.risk_score.toFixed(2) : '0.00'})
+                    </span>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-2 text-xs font-mono text-slate-300">
                   <div className="bg-slate-950/60 p-2 rounded border border-slate-800">
@@ -405,12 +456,22 @@ export const LiveMonitoringMap: React.FC<LiveMonitoringMapProps> = ({
                   </div>
                 </div>
 
-                <button
-                  onClick={() => onSelectTourist(null)}
-                  className="mt-3 w-full py-1 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded transition-colors font-medium"
-                >
-                  Deselect & Clear Breadcrumbs
-                </button>
+                <div className="flex gap-2 mt-3">
+                  {onInspectRisk && (
+                    <button
+                      onClick={() => onInspectRisk(t)}
+                      className="flex-1 py-1.5 text-xs font-bold text-indigo-300 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 rounded transition-colors"
+                    >
+                      Inspect Risk Details
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onSelectTourist(null)}
+                    className="py-1.5 px-3 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded transition-colors"
+                  >
+                    Deselect
+                  </button>
+                </div>
               </div>
             );
           })()}

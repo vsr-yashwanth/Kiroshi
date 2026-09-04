@@ -131,5 +131,28 @@ export const api = {
     });
     return handleResponse(res);
   },
+
+  // Risk Engine (v0.3)
+  getCurrentRisk: async (touristId: string): Promise<any> => {
+    const res = await fetch(`${API_BASE}/risk/current/${touristId}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  getTripRiskHistory: async (tripId: string, limit = 50): Promise<any[]> => {
+    const res = await fetch(`${API_BASE}/risk/history/${tripId}?limit=${limit}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  getActiveRiskSnapshot: async (): Promise<any[]> => {
+    const res = await fetch(`${API_BASE}/risk/active`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
 };
+
 
