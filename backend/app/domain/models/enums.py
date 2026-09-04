@@ -19,3 +19,23 @@ class EmergencyStatus(str, enum.Enum):
     NORMAL = "NORMAL"
     AT_RISK = "AT_RISK"
     SOS = "SOS"
+
+
+class GeoZoneType(str, enum.Enum):
+    SAFE = "SAFE"
+    RESTRICTED = "RESTRICTED"
+    HIGH_RISK = "HIGH_RISK"
+    CUSTOM = "CUSTOM"
+
+
+class ZoneEventType(str, enum.Enum):
+    ENTER = "ENTER"
+    EXIT = "EXIT"
+
+
+class LocationFreshness(str, enum.Enum):
+    LIVE = "LIVE"
+    RECENT = "RECENT"
+    STALE = "STALE"
+    UNKNOWN = "UNKNOWN"
+

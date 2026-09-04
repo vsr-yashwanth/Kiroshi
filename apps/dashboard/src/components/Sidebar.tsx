@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Users, Compass, Activity, LogOut } from 'lucide-react';
+import { Shield, Users, Compass, Activity, LogOut, Radio } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface SidebarProps {
@@ -12,6 +12,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange }) => 
 
   const navItems = [
     { id: 'overview', label: 'Command Overview', icon: Activity },
+    { id: 'monitoring', label: 'Live Geospatial Map', icon: Radio },
     { id: 'tourists', label: 'Registered Tourists', icon: Users },
     { id: 'trips', label: 'Active Trips Fleet', icon: Compass },
   ];
@@ -34,7 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabChange }) => 
         </div>
         <div>
           <h2 style={{ fontSize: '1.125rem', fontWeight: 700, letterSpacing: '0.05em', color: '#ffffff' }}>KIROSHI</h2>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Authority v0.1</span>
+          <span style={{ fontSize: '0.7rem', color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Authority v0.2</span>
         </div>
       </div>
 

@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.0] — 2026-09-04
+
+### Added
+- **PostGIS Spatial Persistence**: Integrated `GeoAlchemy2` and PostGIS 3.4 Point and Polygon types with SRID 4326 and spatial GIST indexes.
+- **Location Ingestion API**: Implemented `POST /api/v1/location` with server-side coordinate range checking, clock skew boundaries, accuracy limits, and active trip ownership verification.
+- **Trip Trajectory API**: Added `GET /api/v1/location/history/{trip_id}` and `GET /api/v1/location/active` for route history and live positions.
+- **GeoZone Management**: Added `GET /api/v1/zones`, `POST /api/v1/zones`, `DELETE /api/v1/zones/{id}`, and `GET /api/v1/zones/events` for polygon safety perimeters (`SAFE`, `RESTRICTED`, `HIGH_RISK`, `CUSTOM`).
+- **Geofence State Transition Machine**: Implemented edge-triggered spatial containment evaluation using PostGIS `ST_Covers`, generating discrete `ENTER` and `EXIT` events with zero duplicate spamming.
+- **Authenticated WebSockets**: Created full-duplex `/api/v1/ws/authority` endpoint supporting token handshake authentication, role-based access control, initial snapshot hydration, heartbeat keepalives, and fault-isolated fanout.
+- **Authority Dashboard Live Map**: Added interactive SVG/GIS map component (`LiveMonitoringMap.tsx`), real-time WebSocket hook (`useLiveStream.ts`), and command center page (`LiveMonitoringPage.tsx`) with tourist markers, breadcrumb trails, geozone overlays, and live alert feed.
+- **Mobile Location Tracking**: Added Flutter GPS tracking service (`LocationTrackingService`), state machine (`LocationState`), permissions management, battery-efficient 10m distance filtering, and real-time telemetry screen (`LiveTrackingScreen`).
+- **Automated Testing Suite**: Added 17 new tests covering location ingestion validation, PostGIS spatial queries, geofence state transitions, WebSocket RBAC, and complete v0.2 end-to-end workflow (33/33 total passing).
+- **Documentation**: Added `REALTIME.md`, `LOCATION_TRACKING.md`, `GEO_FENCING.md`, `ADR-003-websocket-realtime.md`, and `ADR-004-postgis-spatial-engine.md`.
+
+### Security
+- Derived `tourist_id` strictly from verified JWT claims to prevent IDOR and cross-user location spoofing.
+- Enforced WebSocket RBAC restricting live telemetry streams exclusively to `AUTHORITY` and `ADMIN` roles.
+- Sanitized real-time telemetry frames to prevent leaking unnecessary PII over live streams.
+
+---
+
 ## [0.1.0] — 2026-09-04
 
 ### Added

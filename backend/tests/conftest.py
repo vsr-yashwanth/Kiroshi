@@ -26,6 +26,41 @@ engine = create_engine(
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_sqlite_spatial_udfs():
+    import shapely.wkt
+    import shapely.wkb
+    from sqlalchemy import event
+
+    def as_ewkb(val):
+        if val is None:
+            return None
+        if isinstance(val, str):
+            if ";" in val:
+                val = val.split(";", 1)[1]
+            try:
+                geom = shapely.wkt.loads(val)
+                return shapely.wkb.dumps(geom, hex=True, srid=4326)
+            except Exception:
+                return val
+        return val
+
+    @event.listens_for(engine, "connect")
+    def register_test_sqlite_udfs(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+        dbapi_connection.create_function("GeomFromEWKT", 1, lambda x: x)
+        dbapi_connection.create_function("GeomFromText", 1, lambda x: x)
+        dbapi_connection.create_function("ST_GeomFromText", 1, lambda x: x)
+        dbapi_connection.create_function("AsEWKB", 1, as_ewkb)
+        dbapi_connection.create_function("ST_AsEWKB", 1, as_ewkb)
+        dbapi_connection.create_function("AsBinary", 1, as_ewkb)
+        dbapi_connection.create_function("ST_AsBinary", 1, as_ewkb)
+
+
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

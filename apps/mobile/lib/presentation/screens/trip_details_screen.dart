@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../application/trip_state.dart';
 import '../../domain/models/trip.dart';
+import 'live_tracking_screen.dart';
 
 class TripDetailsScreen extends StatefulWidget {
   final String tripId;
@@ -178,7 +179,25 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
               ),
-            if (isActive)
+            if (isActive) ...[
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => LiveTrackingScreen(trip: trip),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.satellite_alt_rounded),
+                label: const Text('Open Real-Time GPS Tracking', style: TextStyle(fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryLight,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+              const SizedBox(height: 12),
               ElevatedButton.icon(
                 onPressed: _isProcessing
                     ? null
@@ -204,6 +223,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
               ),
+            ],
           ],
         ),
       ),

@@ -177,6 +177,139 @@ Performs system health check including database connectivity.
       "status": "healthy",
       "environment": "development",
       "database": "connected",
-      "version": "0.1.0"
+      "version": "0.2.0"
     }
     ```
+
+---
+
+## 5. Location & Telemetry Endpoints (v0.2)
+
+### `POST /api/v1/location`
+Ingests a GPS location fix for an active trip. Performs validation, PostGIS persistence, geofence evaluation, and real-time WebSocket broadcast.
+
+- **Access**: Authenticated (`TOURIST`)
+- **Request Body**:
+  ```json
+  {
+    "trip_id": "7b8971f4-3450-424a-9b16-562aef768222",
+    "latitude": 32.2432,
+    "longitude": 77.1892,
+    "altitude": 2050.5,
+    "accuracy": 8.0,
+    "speed": 1.2,
+    "bearing": 180.0,
+    "recorded_at": "2026-09-04T10:15:30Z"
+  }
+  ```
+- **Responses**:
+  - `201 Created`: Location ingested with triggered geofence events.
+    ```json
+    {
+      "id": "9f2a4128-...",
+      "tourist_id": "c1f72922-...",
+      "trip_id": "7b8971f4-...",
+      "latitude": 32.2432,
+      "longitude": 77.1892,
+      "altitude": 2050.5,
+      "accuracy": 8.0,
+      "speed": 1.2,
+      "bearing": 180.0,
+      "recorded_at": "2026-09-04T10:15:30Z",
+      "received_at": "2026-09-04T10:15:31Z",
+      "triggered_events": [
+        {
+          "event_type": "ENTER",
+          "zone_name": "Solang Avalanche Basin",
+          "zone_type": "HIGH_RISK"
+        }
+      ]
+    }
+    ```
+  - `400 Bad Request`: Validation failure (out-of-range coordinates, invalid accuracy, clock skew > 300s, or trip not in `ACTIVE` state).
+  - `403 Forbidden`: Trip does not belong to the authenticated tourist.
+  - `404 Not Found`: Trip does not exist.
+
+### `GET /api/v1/location/history/{trip_id}`
+Retrieves chronologically ordered GPS breadcrumb trail for a specific trip.
+
+- **Access**: Trip Owner (`TOURIST`) or `AUTHORITY` / `ADMIN`.
+- **Query Parameters**:
+  - `limit`: Integer (default 500, max 2000).
+- **Responses**:
+  - `200 OK`: List of `LocationEvent` DTOs.
+  - `403 Forbidden`: Trip belongs to another tourist.
+
+### `GET /api/v1/location/active`
+Retrieves latest known location and freshness status for all currently active trips.
+
+- **Access**: `AUTHORITY` or `ADMIN`.
+- **Responses**:
+  - `200 OK`: List of active tourist telemetry records.
+
+---
+
+## 6. GeoZone Management Endpoints (v0.2)
+
+### `GET /api/v1/zones`
+Lists all active geofence zones.
+
+- **Access**: Authenticated (`TOURIST`, `AUTHORITY`, `ADMIN`).
+- **Responses**:
+  - `200 OK`: Array of `GeoZone` objects with geometry vertex coordinates.
+
+### `POST /api/v1/zones`
+Creates a new geofence polygon zone.
+
+- **Access**: `AUTHORITY` or `ADMIN`.
+- **Request Body**:
+  ```json
+  {
+    "name": "Solang Avalanche Basin",
+    "zone_type": "HIGH_RISK",
+    "coordinates": [
+      [32.2400, 77.1850],
+      [32.2500, 77.1850],
+      [32.2500, 77.1950],
+      [32.2400, 77.1950],
+      [32.2400, 77.1850]
+    ],
+    "description": "Active avalanche slide path during winter/spring months."
+  }
+  ```
+- **Responses**:
+  - `201 Created`: GeoZone created and indexed.
+  - `400 Bad Request`: Invalid polygon geometry (<3 vertices, self-intersecting, or invalid coordinate ranges).
+  - `403 Forbidden`: Insufficient authority permissions.
+
+### `GET /api/v1/zones/events`
+Retrieves recent geofence crossing audit log (`ENTER` and `EXIT` events).
+
+- **Access**: `AUTHORITY` or `ADMIN`.
+- **Query Parameters**:
+  - `limit`: Integer (default 50).
+- **Responses**:
+  - `200 OK`: List of `ZoneEvent` records.
+
+### `DELETE /api/v1/zones/{id}`
+Deactivates or deletes a geofence zone.
+
+- **Access**: `AUTHORITY` or `ADMIN`.
+- **Responses**:
+  - `200 OK`: `{"message": "Zone deleted successfully"}`
+  - `404 Not Found`: Zone does not exist.
+
+---
+
+## 7. Real-Time Streaming (v0.2)
+
+### `WebSocket /api/v1/ws/authority`
+Full-duplex real-time telemetry and geofence alert stream for authority dashboards.
+
+- **Access**: Authenticated via Query Parameter `?token=<JWT_TOKEN>` (`AUTHORITY` or `ADMIN`).
+- **Events Streamed**:
+  - `snapshot`: Initial state hydration of all active tourists upon connect.
+  - `location_update`: Real-time GPS movement and freshness indicator.
+  - `zone_event`: Immediate `ENTER` / `EXIT` geofence crossing alerts.
+  - `pong`: Response to client `ping` keepalive.
+
