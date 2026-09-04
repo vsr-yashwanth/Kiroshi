@@ -1,8 +1,9 @@
 # KIROSHI — Smart Tourist Safety Monitoring & Incident Response System
 
 [![CI](https://github.com/vsr-yashwanth/KIROSHI/actions/workflows/ci.yml/badge.svg)](https://github.com/vsr-yashwanth/KIROSHI/actions)
-[![Milestone](https://img.shields.io/badge/Milestone-v0.1.0--Core--Platform-blue.svg)](https://github.com/vsr-yashwanth/KIROSHI)
+[![Milestone](https://img.shields.io/badge/Milestone-v0.2.0--Real--Time--Geospatial-success.svg)](https://github.com/vsr-yashwanth/KIROSHI)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![PostGIS](https://img.shields.io/badge/PostGIS-3.4%2B-336791.svg)](https://postgis.net/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-19.x-61DAFB.svg)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6.svg)](https://www.typescriptlang.org/)
@@ -12,17 +13,17 @@
 
 ---
 
-## Current Status: Milestone v0.1.0 — Core Platform
+## Current Status: Milestone v0.2.0 — Real-Time Geospatial & Geofencing
 
-This milestone establishes the verified foundational core of KIROSHI:
+Milestone v0.2 introduces real-time spatial monitoring and geofence safety perimeter tracking to the KIROSHI platform:
 
-- **Clean Backend Monolith (FastAPI)**: Layered architecture (API, Services, Domain, Repositories, Database).
-- **Relational Data Foundation (SQLAlchemy 2.0 + Alembic)**: UUID primary keys, strict foreign key constraints, timestamps, and indexing. Configured for PostgreSQL/PostGIS with resilient local SQLite fallback.
-- **Server-Enforced Authentication & Authorization**: Argon2/Bcrypt password hashing, JWT bearer tokens, and server-enforced role access controls (`TOURIST`, `AUTHORITY`, `RESPONDER`, `ADMIN`). Cross-tenant and IDOR protected.
-- **Trip Lifecycle Management**: Tourists can create trips, define itinerary waypoints, and transition trips through state machines (`PLANNED` -> `ACTIVE` -> `COMPLETED`).
-- **Authority Command Portal (React + TypeScript)**: Dedicated web portal for tourism authorities to inspect verified tourist profiles, active trips, and system metrics.
-- **Mobile Client Architecture (Flutter / Dart)**: Domain-driven clean architecture specification for the tourist client app.
-- **Comprehensive Test Suite**: Automated unit, security, integration, and API tests executed via `pytest`.
+- **Real-Time Location Ingestion API**: High-throughput `POST /api/v1/location` endpoint with strict coordinate validation, clock skew guards, horizontal accuracy filtering, and trip ownership verification.
+- **PostGIS Spatial Foundation (PostgreSQL 16 + PostGIS 3.4)**: Native EPSG:4326 Point and Polygon geometries stored in `location_events` and `geo_zones`, accelerated by spatial GIST indexes.
+- **Geofence State Transition Engine**: Edge-triggered polygon containment evaluator using PostGIS `ST_Covers`. Generates discrete `ENTER` and `EXIT` events without alert spamming or oscillation.
+- **Authenticated Authority WebSockets (`/api/v1/ws/authority`)**: Full-duplex real-time streaming with query-token authentication, authority role enforcement, initial state snapshots, bidirectional heartbeats, and fault-isolated fanout.
+- **Live Authority Command Map (React 19 + TypeScript)**: Interactive GIS surveillance dashboard rendering active tourist markers, breadcrumb route trails, color-coded safety zones, live status indicators, and real-time alert feed.
+- **Mobile GPS Tracking Service (Flutter / Dart)**: Clean architecture location service managing permissions, device GPS state machine, adaptive 10m distance filtering for battery efficiency, and real-time telemetry presentation.
+- **Comprehensive Automated Test Suite**: 33 automated tests passing cleanly across unit, spatial queries, geofence state transitions, WebSocket RBAC, and end-to-end v0.2 workflow.
 
 ---
 
