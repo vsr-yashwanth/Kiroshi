@@ -9,6 +9,13 @@ from backend.app.domain.models.enums import (
     RiskLevel,
     RecommendedAction,
     RiskSignalType,
+    IncidentSource,
+    IncidentSeverity,
+    IncidentStatus,
+    IncidentEventType,
+    AssignmentStatus,
+    NotificationChannel,
+    NotificationDeliveryStatus,
 )
 from backend.app.domain.models.base import TimestampMixin, UUIDModel
 from backend.app.domain.models.user import User
@@ -19,6 +26,10 @@ from backend.app.domain.models.location_event import LocationEvent
 from backend.app.domain.models.geo_zone import GeoZone
 from backend.app.domain.models.zone_event import TouristZoneState, ZoneEvent
 from backend.app.domain.models.risk_assessment import RiskAssessment
+from backend.app.domain.models.incident import Incident
+from backend.app.domain.models.incident_event import IncidentEvent
+from backend.app.domain.models.incident_assignment import IncidentAssignment
+from backend.app.domain.models.notification import Notification
 
 __all__ = [
     "Base",
@@ -31,6 +42,13 @@ __all__ = [
     "RiskLevel",
     "RecommendedAction",
     "RiskSignalType",
+    "IncidentSource",
+    "IncidentSeverity",
+    "IncidentStatus",
+    "IncidentEventType",
+    "AssignmentStatus",
+    "NotificationChannel",
+    "NotificationDeliveryStatus",
     "TimestampMixin",
     "UUIDModel",
     "User",
@@ -42,5 +60,8 @@ __all__ = [
     "TouristZoneState",
     "ZoneEvent",
     "RiskAssessment",
+    "Incident",
+    "IncidentEvent",
+    "IncidentAssignment",
+    "Notification",
 ]
-

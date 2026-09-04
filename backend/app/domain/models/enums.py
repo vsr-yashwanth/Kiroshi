@@ -65,3 +65,63 @@ class RiskSignalType(str, enum.Enum):
     ZONE_EVENT = "ZONE_EVENT"
 
 
+class IncidentSource(str, enum.Enum):
+    SOS = "SOS"
+    RISK_ENGINE = "RISK_ENGINE"
+    AUTHORITY = "AUTHORITY"
+    SYSTEM = "SYSTEM"
+
+
+class IncidentSeverity(str, enum.Enum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+
+class IncidentStatus(str, enum.Enum):
+    DETECTED = "DETECTED"
+    VERIFYING = "VERIFYING"
+    VERIFIED = "VERIFIED"
+    ESCALATED = "ESCALATED"
+    ASSIGNED = "ASSIGNED"
+    RESPONDING = "RESPONDING"
+    RESOLVED = "RESOLVED"
+    CLOSED = "CLOSED"
+    DISMISSED = "DISMISSED"
+
+
+class IncidentEventType(str, enum.Enum):
+    INCIDENT_CREATED = "INCIDENT_CREATED"
+    STATUS_CHANGED = "STATUS_CHANGED"
+    INCIDENT_VERIFIED = "INCIDENT_VERIFIED"
+    INCIDENT_ESCALATED = "INCIDENT_ESCALATED"
+    INCIDENT_ASSIGNED = "INCIDENT_ASSIGNED"
+    RESPONSE_STARTED = "RESPONSE_STARTED"
+    INCIDENT_RESOLVED = "INCIDENT_RESOLVED"
+    INCIDENT_CLOSED = "INCIDENT_CLOSED"
+    INCIDENT_DISMISSED = "INCIDENT_DISMISSED"
+
+
+class AssignmentStatus(str, enum.Enum):
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
+    REASSIGNED = "REASSIGNED"
+    CANCELLED = "CANCELLED"
+
+
+class NotificationChannel(str, enum.Enum):
+    IN_APP = "IN_APP"
+    PUSH = "PUSH"
+    SMS = "SMS"
+    EMAIL = "EMAIL"
+
+
+class NotificationDeliveryStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    SENT = "SENT"
+    FAILED = "FAILED"
+    RETRYING = "RETRYING"
+
+
+
