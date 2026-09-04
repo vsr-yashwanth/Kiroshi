@@ -1,0 +1,57 @@
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.env
+
+# AI & Milestone Prompts (Local Only)
+AI_PROMPTS/
+Prompts/
+
+# Python & Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Node.js & Dashboard
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+dist/
+dist-ssr/
+*.local
+
+# Flutter & Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+.pub/
+.pub-cache/
+
+# Databases & Local state
+*.db
+*.sqlite3
+kiroshi.db
+
+# IDEs & System files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
