@@ -1,4 +1,4 @@
-import { User, TouristProfile, Trip, SystemHealth } from '../types';
+import { User, TouristProfile, Trip, SystemHealth, GeoZone, ZoneEvent, LiveTouristPosition } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -83,4 +83,53 @@ export const api = {
     });
     return handleResponse(res);
   },
+
+  // Geospatial & Real-time (Authority)
+  getActiveTourists: async (): Promise<LiveTouristPosition[]> => {
+    const res = await fetch(`${API_BASE}/location/active`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  getTripHistory: async (tripId: string): Promise<any[]> => {
+    const res = await fetch(`${API_BASE}/location/history/${tripId}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  listZones: async (): Promise<GeoZone[]> => {
+    const res = await fetch(`${API_BASE}/zones`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  createZone: async (data: { name: string; description?: string; zone_type: string; coordinates: [number, number][] }): Promise<GeoZone> => {
+    const res = await fetch(`${API_BASE}/zones`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
+
+  deleteZone: async (id: string): Promise<void> => {
+    const res = await fetch(`${API_BASE}/zones/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to delete zone with status ${res.status}`);
+    }
+  },
+
+  listZoneEvents: async (limit = 50): Promise<ZoneEvent[]> => {
+    const res = await fetch(`${API_BASE}/zones/events?limit=${limit}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
 };
+

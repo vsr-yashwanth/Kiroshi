@@ -57,3 +57,46 @@ export interface SystemHealth {
   database: string;
   version: string;
 }
+
+export type GeoZoneType = 'SAFE' | 'RESTRICTED' | 'HIGH_RISK' | 'CUSTOM';
+export type ZoneEventType = 'ENTER' | 'EXIT';
+export type LocationFreshness = 'LIVE' | 'RECENT' | 'STALE' | 'UNKNOWN';
+
+export interface GeoZone {
+  id: string;
+  name: string;
+  description?: string;
+  zone_type: GeoZoneType;
+  coordinates: [number, number][];
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface ZoneEvent {
+  id: string;
+  tourist_id: string;
+  trip_id: string;
+  zone_id: string;
+  zone_name?: string;
+  zone_type?: GeoZoneType;
+  event_type: ZoneEventType;
+  occurred_at: string;
+}
+
+export interface LiveTouristPosition {
+  tourist_id: string;
+  tourist_name: string;
+  trip_id: string;
+  trip_title: string;
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+  altitude?: number;
+  speed?: number;
+  heading?: number;
+  freshness: LocationFreshness;
+  recorded_at: string;
+  received_at: string;
+  active_zones: string[];
+}
+
