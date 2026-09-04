@@ -170,3 +170,46 @@ def tourist_2_token_headers(tourist_user_2) -> dict:
 def authority_token_headers(authority_user) -> dict:
     token = create_access_token(subject=authority_user.id, role=authority_user.role.value)
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def responder_user(db_session) -> User:
+    user = User(
+        email="responder@example.com",
+        hashed_password=get_password_hash("ResponderPass123!"),
+        full_name="Officer Kenji",
+        role=UserRole.RESPONDER,
+        is_active=True,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def responder_token_headers(responder_user) -> dict:
+    token = create_access_token(subject=responder_user.id, role=responder_user.role.value)
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def admin_user(db_session) -> User:
+    user = User(
+        email="admin@example.com",
+        hashed_password=get_password_hash("AdminPass123!"),
+        full_name="System Admin",
+        role=UserRole.ADMIN,
+        is_active=True,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def admin_token_headers(admin_user) -> dict:
+    token = create_access_token(subject=admin_user.id, role=admin_user.role.value)
+    return {"Authorization": f"Bearer {token}"}
+

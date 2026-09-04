@@ -149,12 +149,10 @@ def test_complete_v03_risk_engine_workflow(client: TestClient):
         )
         assert loc2_resp.status_code == 201
 
-        # WebSocket receives: LOCATION_UPDATE, ZONE_ENTER, and RISK_UPDATE!
-        received_messages = [
-            json.loads(ws.receive_text()),
-            json.loads(ws.receive_text()),
-            json.loads(ws.receive_text()),
-        ]
+        # WebSocket receives: LOCATION_UPDATE, ZONE_ENTER, RISK_UPDATE, and v0.4 INCIDENT_CREATED
+        received_messages = []
+        for _ in range(4):
+            received_messages.append(json.loads(ws.receive_text()))
         msg_types = [m["type"] for m in received_messages]
         assert "LOCATION_UPDATE" in msg_types
         assert "ZONE_ENTER" in msg_types
