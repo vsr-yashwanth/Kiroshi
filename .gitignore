@@ -43,6 +43,8 @@ build/
 .pub-cache/
 apps/mobile/android/.gradle/
 apps/mobile/android/local.properties
+apps/mobile/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+releases/*.apk
 
 # Databases & Local state
 *.db
