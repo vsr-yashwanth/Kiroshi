@@ -4,7 +4,7 @@ import '../../core/constants/app_colors.dart';
 class LoadingView extends StatelessWidget {
   final String message;
 
-  const LoadingView({Key? key, this.message = 'Loading...'}) : super(key: key);
+  const LoadingView({super.key, this.message = 'Loading...'});
 
   @override
   Widget build(BuildContext context) {

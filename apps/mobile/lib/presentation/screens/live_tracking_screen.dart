@@ -9,7 +9,7 @@ import '../widgets/sos_confirmation_sheet.dart';
 class LiveTrackingScreen extends StatelessWidget {
   final TripModel trip;
 
-  const LiveTrackingScreen({Key? key, required this.trip}) : super(key: key);
+  const LiveTrackingScreen({super.key, required this.trip});
 
   @override
   Widget build(BuildContext context) {
@@ -237,7 +237,6 @@ class LiveTrackingScreen extends StatelessWidget {
         description = 'Device GPS service is currently turned off or unavailable.';
         break;
       case TrackingStatus.trackingDisabled:
-      default:
         bannerColor = AppColors.textMuted;
         icon = Icons.pause_circle_outline;
         title = 'TRACKING DISABLED';

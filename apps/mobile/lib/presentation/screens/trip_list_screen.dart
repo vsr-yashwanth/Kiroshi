@@ -12,7 +12,7 @@ import 'login_screen.dart';
 import '../widgets/sos_confirmation_sheet.dart';
 
 class TripListScreen extends StatefulWidget {
-  const TripListScreen({Key? key}) : super(key: key);
+  const TripListScreen({super.key});
 
   @override
   State<TripListScreen> createState() => _TripListScreenState();

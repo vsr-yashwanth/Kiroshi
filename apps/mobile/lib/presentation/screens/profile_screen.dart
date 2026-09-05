@@ -5,7 +5,7 @@ import '../../application/auth_state.dart';
 import '../../domain/models/tourist_profile.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  const ProfileScreen({super.key});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -166,6 +166,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(color: AppColors.textMuted, fontSize: 12),
               ),
               activeColor: AppColors.primary,
+              activeTrackColor: AppColors.primary.withOpacity(0.5),
             ),
             const SizedBox(height: 24),
             ElevatedButton(

@@ -7,7 +7,7 @@ import 'register_screen.dart';
 import 'trip_list_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -77,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 await Endpoints.setBaseUrl(newUrl);
                 if (mounted) setState(() {});
               }
-              Navigator.pop(ctx);
+              if (ctx.mounted) Navigator.pop(ctx);
             },
             child: const Text('Save'),
           ),

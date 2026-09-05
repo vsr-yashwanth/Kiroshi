@@ -18,7 +18,7 @@ void main() async {
 }
 
 class KiroshiApp extends StatelessWidget {
-  const KiroshiApp({Key? key}) : super(key: key);
+  const KiroshiApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +51,6 @@ class KiroshiApp extends StatelessWidget {
                 primary: AppColors.primary,
                 secondary: AppColors.primaryLight,
                 surface: AppColors.surface,
-                background: AppColors.background,
               ),
             ),
             home: authState.isAuthenticated

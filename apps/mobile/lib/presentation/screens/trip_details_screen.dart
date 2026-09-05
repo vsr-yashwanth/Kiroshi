@@ -8,7 +8,7 @@ import 'live_tracking_screen.dart';
 class TripDetailsScreen extends StatefulWidget {
   final String tripId;
 
-  const TripDetailsScreen({Key? key, required this.tripId}) : super(key: key);
+  const TripDetailsScreen({super.key, required this.tripId});
 
   @override
   State<TripDetailsScreen> createState() => _TripDetailsScreenState();

@@ -31,8 +31,8 @@ if is_sqlite:
             if ";" in val:
                 val = val.split(";", 1)[1]
             try:
-                import shapely.wkt
-                import shapely.wkb
+                import shapely.wkt  # type: ignore
+                import shapely.wkb  # type: ignore
                 geom = shapely.wkt.loads(val)
                 return shapely.wkb.dumps(geom, hex=True, srid=4326)
             except Exception:
