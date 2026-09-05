@@ -9,10 +9,11 @@ from fastapi import HTTPException, status
 
 from backend.app.domain.models.camera import Camera
 from backend.app.domain.models.cctv_investigation import CCTVInvestigation
-from backend.app.domain.models.enums import CameraStatus, InvestigationStatus, IncidentSource
+from backend.app.domain.models.enums import CameraStatus, InvestigationStatus, IncidentSource, AuditEventType, AuditOutcome
 from backend.app.domain.models.incident import Incident
 from backend.app.repositories.cctv_repository import CCTVRepository
 from backend.app.repositories.incident_repository import IncidentRepository
+from backend.app.repositories.audit_repository import AuditRepository
 from backend.app.schemas.cctv import (
     CameraCreate,
     CameraResponse,
@@ -30,6 +31,7 @@ class CCTVService:
         self.db = db
         self.cctv_repo = CCTVRepository(db)
         self.incident_repo = IncidentRepository(db)
+        self.audit_repo = AuditRepository(db)
         self.fall_detector = FallDetector(FallDetectorConfig())
 
     def register_camera(self, data: CameraCreate) -> CameraResponse:
@@ -169,7 +171,7 @@ class CCTVService:
             + ("POSSIBLE_FALL detected on camera footage." if possible_fall_detected else "No fall dynamics detected.")
         )
 
-        # 3. Create Investigation Audit Record
+        # 3. Create Investigation Audit Record & Cryptographic Audit Event
         inv = self.cctv_repo.create_investigation(
             incident_id=incident.id,
             requested_by=requested_by_user_id,
@@ -181,6 +183,22 @@ class CCTVService:
             status=InvestigationStatus.COMPLETED,
             summary=summary,
             metadata={"possible_fall_detected": possible_fall_detected}
+        )
+
+        self.audit_repo.create_event(
+            event_type=AuditEventType.CCTV_INVESTIGATION_COMPLETED,
+            action="INVESTIGATE_CCTV",
+            resource_type="CCTV_INVESTIGATION",
+            resource_id=str(inv.id),
+            actor_id=requested_by_user_id,
+            actor_email=None,
+            actor_role=None,
+            outcome=AuditOutcome.SUCCESS,
+            details={
+                "incident_id": str(incident.id),
+                "cameras_count": len(cameras_queried_ids),
+                "possible_fall_detected": possible_fall_detected,
+            },
         )
 
         return self._to_investigation_response(inv)

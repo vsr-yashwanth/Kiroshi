@@ -156,5 +156,56 @@ class SyncEventStatus(str, enum.Enum):
     ERROR = "ERROR"
 
 
+class AuditEventType(str, enum.Enum):
+    # Authentication events
+    AUTH_LOGIN_SUCCESS = "AUTH_LOGIN_SUCCESS"
+    AUTH_LOGIN_FAILURE = "AUTH_LOGIN_FAILURE"
+    AUTH_LOGOUT = "AUTH_LOGOUT"
+    AUTH_REGISTER = "AUTH_REGISTER"
+    
+    # Profile & Consent access
+    PROFILE_READ = "PROFILE_READ"
+    PROFILE_UPDATE = "PROFILE_UPDATE"
+    PROFILE_CONSENT_CHANGE = "PROFILE_CONSENT_CHANGE"
+    
+    # Sensitive Location data access
+    LOCATION_HISTORY_READ = "LOCATION_HISTORY_READ"
+    LOCATION_ACTIVE_SNAPSHOT_READ = "LOCATION_ACTIVE_SNAPSHOT_READ"
+    
+    # Incident lifecycle & state transitions
+    INCIDENT_CREATE = "INCIDENT_CREATE"
+    INCIDENT_MODIFY = "INCIDENT_MODIFY"
+    INCIDENT_STATE_TRANSITION = "INCIDENT_STATE_TRANSITION"
+    INCIDENT_ASSIGNMENT = "INCIDENT_ASSIGNMENT"
+    INCIDENT_DISMISSAL = "INCIDENT_DISMISSAL"
+    
+    # Privilege & Permission modifications
+    ROLE_CHANGE = "ROLE_CHANGE"
+    USER_STATUS_CHANGE = "USER_STATUS_CHANGE"
+    
+    # CCTV & Investigation operations
+    CCTV_INVESTIGATION_REQUEST = "CCTV_INVESTIGATION_REQUEST"
+    CCTV_INVESTIGATION_COMPLETED = "CCTV_INVESTIGATION_COMPLETED"
+    
+    # Data Export
+    DATA_EXPORT = "DATA_EXPORT"
+    
+    # Audit chain verification
+    AUDIT_CHAIN_VERIFY = "AUDIT_CHAIN_VERIFY"
+
+
+class AuditOutcome(str, enum.Enum):
+    SUCCESS = "SUCCESS"
+    FAILURE = "FAILURE"
+    DENIED = "DENIED"
+
+
+class TrustAnchorStatus(str, enum.Enum):
+    ANCHORED = "ANCHORED"
+    PENDING = "PENDING"
+    FAILED = "FAILED"
+    DISABLED = "DISABLED"
+
+
 
 

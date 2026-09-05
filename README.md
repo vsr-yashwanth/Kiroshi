@@ -1,7 +1,7 @@
 # KIROSHI — Smart Tourist Safety Monitoring & Incident Response System
 
 [![CI](https://github.com/vsr-yashwanth/KIROSHI/actions/workflows/ci.yml/badge.svg)](https://github.com/vsr-yashwanth/KIROSHI/actions)
-[![Milestone](https://img.shields.io/badge/Milestone-v0.6.0--Computer--Vision-success.svg)](https://github.com/vsr-yashwanth/KIROSHI)
+[![Milestone](https://img.shields.io/badge/Milestone-v0.7.0--Advanced--Audit--Trust-success.svg)](https://github.com/vsr-yashwanth/KIROSHI)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PostGIS](https://img.shields.io/badge/PostGIS-3.4%2B-336791.svg)](https://postgis.net/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg)](https://fastapi.tiangolo.com/)
@@ -9,22 +9,21 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6.svg)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-> **KIROSHI** (*Keypoint Intelligence for Real-time Observation, Safety & Human Interaction*) is an enterprise-grade tourist safety platform engineered to provide privacy-preserving digital identity, trip and itinerary management, real-time safety tracking, intelligent incident response, and multi-stakeholder authority coordination.
+> **KIROSHI** (*Keypoint Intelligence for Real-time Observation, Safety & Human Interaction*) is an enterprise-grade tourist safety platform engineered to provide privacy-preserving digital identity, trip and itinerary management, real-time safety tracking, intelligent incident response, computer vision hazard detection, and multi-stakeholder authority coordination.
 
 ---
 
-## Current Status: Milestone v0.6.0 — Computer Vision & CCTV Intelligence Layer
+## Current Status: Milestone v0.7.0 — Advanced Audit & Trust Architecture
 
-Milestone v0.6 introduces a modular, explainable Computer Vision and scoped CCTV investigation intelligence layer:
+KIROSHI v0.7 strengthens audit integrity, security, privacy, and tamper evidence through a cryptographically verifiable audit architecture:
 
-- **Decoupled Fall Detection Engine (`ml/models/fall_detector.py`)**: Multi-signal kinematic evaluator analyzing posture aspect ratio, torso angles, vertical descent velocities, and prolonged ground rest.
-- **Critical Safety Guardrail**: Strict enforcement that Computer Vision outputs `POSSIBLE_FALL`, NEVER automatically escalating to `CONFIRMED_EMERGENCY`. Human verification remains authoritative.
-- **CCTV Domain & PostGIS Spatial Discovery (`Camera`, `CCTVInvestigation`)**: Spatially-indexed camera inventory utilizing PostGIS `ST_DWithin` / `ST_Distance` to identify cameras near distress locations.
-- **Scoped, Authorized CCTV Investigation (`/api/v1/cctv/investigate`)**: Privacy-preserving, location-scoped, time-bounded ($\pm 5\text{m}$), and RBAC-authorized investigation pipeline with append-only audit logging.
-- **Risk Engine Integration**: Transparent inclusion of `POSSIBLE_FALL` signals into the deterministic risk scoring pipeline with guaranteed failure isolation (risk engine remains 100% operational if ML fails or times out).
-- **Authority Dashboard Operations Console**: Direct investigation trigger and explainable kinematic evidence inspector inside `IncidentDetailModal.tsx`.
-- **Measured Ground-Truth Evaluation**: Rigorous evaluation achieving 100% Precision, 100% Recall, 1.0000 F1, and 0.031ms mean inference latency (`ml/evaluation/evaluate.py`).
-- **Comprehensive Automated Test Suite**: 90 backend tests passing cleanly across all milestones v0.1–v0.6.
+- **Cryptographic Hash Chaining (`backend/app/engines/audit/`)**: Deterministic SHA-256 hash chaining linking every security-sensitive operation to its predecessor with canonical JSON serialization and UTC ISO timestamps.
+- **Dynamic Tamper Detection (`AuditChainVerifier`)**: Administrative and security verification detecting modified payloads, altered forward pointers, deleted events, and reordered records (`CHAIN_VALID` / `CHAIN_BROKEN` at sequence `#N`).
+- **Comprehensive Audit Coverage**: Full instrumentation across authentication (`LOGIN`, `LOGOUT`, `FAILURE`), tourist profiles (`READ`, `UPDATE`, `CONSENT`), location tracking (`HISTORY_READ`, `ACTIVE_SNAPSHOT`), emergency incidents (`SOS`, `STATE_TRANSITION`, `ASSIGNMENT`), data exports, and CCTV investigations.
+- **Strict Privacy & GDPR Right to Erasure (Art. 17)**: Storing `actor_id` with `ON DELETE SET NULL` and zero PII payloads in audit fields, ensuring account deletion preserves cryptographic chain continuity without violating privacy rights.
+- **Modular Trust Anchoring (`BaseTrustAnchor`)**: Abstracted trust anchor adapter supporting local verification and optional external registry checkpoints without coupling core emergency operations to external network latencies or failures.
+- **Blockchain Evaluation & Rejection**: Full architectural decision rejecting direct blockchain dependencies for core operations to prevent life-critical SOS latency bottlenecks, gas dependencies, and permanent PII immutability risks.
+- **Comprehensive Automated Test Suite**: 102 backend tests passing cleanly across all milestones v0.1–v0.7.
 
 
 ---
@@ -172,10 +171,10 @@ Key principles:
 - [x] **v0.1.0 — Core Platform**: Authentication, Profiles, Trip Management, Authority Inspection.
 - [x] **v0.2.0 — Real-Time Geospatial**: PostGIS spatial queries, location ingestion, WebSockets, live map.
 - [x] **v0.3.0 — Risk Engine**: Multi-signal anomaly detection, route deviation, safety scoring.
-- [ ] **v0.4.0 — Emergency Response**: SOS verification, incident assignment, responder coordination.
-- [ ] **v0.5.0 — Offline-First**: Local event queue, offline SOS, store-and-forward sync.
-- [ ] **v0.6.0 — Computer Vision**: Edge fall detection, CCTV search window assistance.
-- [ ] **v0.7.0 — Audit & Trust**: Cryptographic tamper-evident incident logging.
+- [x] **v0.4.0 — Emergency Response**: SOS verification, incident assignment, responder coordination.
+- [x] **v0.5.0 — Offline-First**: Local event queue, offline SOS, store-and-forward sync.
+- [x] **v0.6.0 — Computer Vision**: Edge fall detection, CCTV search window assistance.
+- [x] **v0.7.0 — Audit & Trust**: Cryptographic tamper-evident incident logging and chain verification.
 - [ ] **v1.0.0 — Production Release**: Penetration testing, load benchmarking, multi-region hardening.
 
 ---

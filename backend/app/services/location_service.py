@@ -9,11 +9,12 @@ from backend.app.core.logging import logger
 from backend.app.domain.models.user import User
 from backend.app.domain.models.trip import Trip
 from backend.app.domain.models.location_event import LocationEvent
-from backend.app.domain.models.enums import TripStatus, LocationFreshness, UserRole
+from backend.app.domain.models.enums import TripStatus, LocationFreshness, UserRole, AuditEventType, AuditOutcome
 from backend.app.schemas.location import LocationIngestRequest, LocationEventResponse, LiveTouristPosition
 from backend.app.repositories.location_repository import LocationRepository
 from backend.app.repositories.trip_repository import TripRepository
 from backend.app.repositories.zone_repository import ZoneRepository
+from backend.app.repositories.audit_repository import AuditRepository
 from backend.app.services.geospatial_service import GeospatialService
 from backend.app.services.risk_service import RiskService
 from backend.app.services.websocket_manager import ws_manager
@@ -25,6 +26,7 @@ class LocationService:
         self.location_repo = LocationRepository(db)
         self.trip_repo = TripRepository(db)
         self.zone_repo = ZoneRepository(db)
+        self.audit_repo = AuditRepository(db)
         self.geo_service = GeospatialService(db)
         self.risk_service = RiskService(db)
 
@@ -213,6 +215,17 @@ class LocationService:
         
         # Authorization: Authority, Admin, or owning Tourist
         if current_user.role not in [UserRole.AUTHORITY, UserRole.ADMIN] and trip.tourist_id != current_user.id:
+            self.audit_repo.create_event(
+                event_type=AuditEventType.LOCATION_HISTORY_READ,
+                action="READ_HISTORY",
+                resource_type="TRIP_LOCATION_HISTORY",
+                resource_id=str(trip_id),
+                actor_id=current_user.id,
+                actor_email=current_user.email,
+                actor_role=current_user.role.value,
+                outcome=AuditOutcome.DENIED,
+                details={"reason": "Unauthorized access to another tourist's location history"},
+            )
             raise HTTPException(status_code=403, detail="Unauthorized to view location history for this trip.")
 
         events = self.location_repo.get_history_for_trip(trip_id, limit=limit)
@@ -221,9 +234,21 @@ class LocationService:
             r = LocationEventResponse.model_validate(e)
             r.freshness = self.calculate_freshness(e.recorded_at)
             results.append(r)
+
+        self.audit_repo.create_event(
+            event_type=AuditEventType.LOCATION_HISTORY_READ,
+            action="READ_HISTORY",
+            resource_type="TRIP_LOCATION_HISTORY",
+            resource_id=str(trip_id),
+            actor_id=current_user.id,
+            actor_email=current_user.email,
+            actor_role=current_user.role.value,
+            outcome=AuditOutcome.SUCCESS,
+            details={"trip_id": str(trip_id), "points_returned": len(results)},
+        )
         return results
 
-    def get_active_tourists_snapshot(self) -> List[LiveTouristPosition]:
+    def get_active_tourists_snapshot(self, requesting_user: Optional[User] = None) -> List[LiveTouristPosition]:
         latest_events = self.location_repo.get_active_tourists_latest()
         snapshot = []
         for e in latest_events:
@@ -259,4 +284,18 @@ class LocationService:
                     active_zones=active_zone_names,
                 )
             )
+
+        if requesting_user:
+            self.audit_repo.create_event(
+                event_type=AuditEventType.LOCATION_ACTIVE_SNAPSHOT_READ,
+                action="READ_ACTIVE_SNAPSHOT",
+                resource_type="LIVE_TOURIST_POSITIONS",
+                resource_id=None,
+                actor_id=requesting_user.id,
+                actor_email=requesting_user.email,
+                actor_role=requesting_user.role.value,
+                outcome=AuditOutcome.SUCCESS,
+                details={"active_tourists_count": len(snapshot)},
+            )
+
         return snapshot

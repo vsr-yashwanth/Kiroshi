@@ -41,11 +41,42 @@ async def login(
         username = json_data.get("username")
         password = json_data.get("password")
 
-    return auth_service.authenticate(email=username, password=password)
+    client_ip = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+
+    return auth_service.authenticate(
+        email=username,
+        password=password,
+        client_ip=client_ip,
+        user_agent=user_agent,
+    )
 
 
 @router.post("/logout", response_model=MessageResponse)
-def logout(current_user: User = Depends(get_current_user)):
+def logout(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    from backend.app.domain.models.enums import AuditEventType, AuditOutcome
+    from backend.app.repositories.audit_repository import AuditRepository
+    
+    audit_repo = AuditRepository(db)
+    client_ip = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+
+    audit_repo.create_event(
+        event_type=AuditEventType.AUTH_LOGOUT,
+        action="LOGOUT",
+        resource_type="USER",
+        resource_id=str(current_user.id),
+        actor_id=current_user.id,
+        actor_email=current_user.email,
+        actor_role=current_user.role.value,
+        client_ip=client_ip,
+        user_agent=user_agent,
+        outcome=AuditOutcome.SUCCESS,
+    )
     return MessageResponse(message="Logged out successfully")
 
 

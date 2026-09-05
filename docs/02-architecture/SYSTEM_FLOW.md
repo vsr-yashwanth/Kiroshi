@@ -1,6 +1,6 @@
-# System Flow — KIROSHI v0.2
+# System Flow — KIROSHI v0.7
 
-> Status: IMPLEMENTED (v0.2)
+> Status: IMPLEMENTED (v0.7 Advanced Audit & Trust)
 
 ---
 
@@ -58,102 +58,30 @@ sequenceDiagram
 
 ## 2. v0.2 Real-Time Geospatial & Geofencing Pipeline
 
-The v0.2 architecture establishes real-time telemetry streaming from tourist mobile devices into PostGIS spatial storage, evaluates polygon containment, and fans out low-latency WebSockets to authority dashboards:
-
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Tourist as Tourist (Mobile)
-    participant Mobile as Flutter App (Geolocator)
-    participant Backend as FastAPI Location Service
-    participant PostGIS as PostgreSQL 16 + PostGIS 3.4
-    participant WSManager as WebSocket Connection Manager
-    actor Authority as Authority Officer
-    participant Dash as Authority Dashboard
+    actor Tourist as Tourist Mobile App
+    participant API as FastAPI /api/v1/locations
+    participant PostGIS as PostgreSQL / PostGIS
+    participant Risk as Risk Assessment Engine
+    participant WS as WebSocket ConnectionManager
+    actor Authority as Authority Dashboard
 
-    Note over Authority, Dash: 1. Authority Live Monitoring Session
-    Authority->>Dash: Open Live Geospatial Map
-    Dash->>Backend: Connect WebSocket /api/v1/ws/authority?token=JWT
-    Backend->>Backend: Validate JWT & verify role is AUTHORITY or ADMIN
-    Backend->>WSManager: Register active WebSocket connection
-    Backend->>PostGIS: Fetch active tourists & latest location snapshots
-    PostGIS-->>Backend: Current positions & zone states
-    Backend-->>Dash: Send initial "snapshot" message with active positions
-
-    Note over Tourist, Dash: 2. Real-Time Telemetry & Geofence Pipeline
-    Mobile->>Mobile: Device GPS fix acquired (lat, lon, accuracy, speed)
-    Mobile->>Mobile: Distance filter check (>10m movement)
-    Mobile->>Backend: POST /api/v1/location (trip_id, lat, lon, recorded_at, accuracy)
-    
-    Backend->>Backend: 1. Authenticate user via JWT Bearer
-    Backend->>Backend: 2. Verify tourist_id matches token (IDOR prevention)
-    Backend->>Backend: 3. Validate coordinates (-90..90, -180..180)
-    Backend->>Backend: 4. Validate accuracy (>0m and <=200m)
-    Backend->>Backend: 5. Verify trip ownership and status == ACTIVE
-    Backend->>Backend: 6. Check clock skew (|now - recorded_at| <= 300s)
-
-    Backend->>PostGIS: Persist LocationEvent (Point SRID 4326, GIST indexed)
-    
-    Backend->>PostGIS: Spatial query active GeoZones: ST_Covers(geometry, ST_SetSRID(ST_MakePoint(lon, lat), 4326))
-    PostGIS-->>Backend: Containing zones matching coordinates
-
-    Backend->>Backend: Evaluate state transitions against TouristZoneState
-    alt Tourist entered new zone (outside -> inside)
-        Backend->>PostGIS: Insert TouristZoneState (is_inside = True)
-        Backend->>PostGIS: Record ZoneEvent (event_type = ENTER)
-        Backend->>WSManager: Broadcast zone_event {event_type: "ENTER", zone_name, severity}
-    else Tourist left previous zone (inside -> outside)
-        Backend->>PostGIS: Update TouristZoneState (is_inside = False)
-        Backend->>PostGIS: Record ZoneEvent (event_type = EXIT)
-        Backend->>WSManager: Broadcast zone_event {event_type: "EXIT", zone_name, severity}
-    else Tourist remains inside (inside -> inside)
-        Backend->>Backend: No duplicate event emitted
-    end
-
-    Backend->>WSManager: Broadcast location_update {tourist_id, trip_id, lat, lon, freshness: "LIVE"}
-    WSManager-->>Dash: Push real-time telemetry frame
-    Dash->>Dash: Animate tourist marker & update breadcrumb route trail
-    Backend-->>Mobile: 201 Created (LocationEvent DTO + triggered events)
+    Tourist->>API: POST /api/v1/locations (lat, lon, accuracy, speed)
+    API->>PostGIS: ST_SetSRID(ST_MakePoint(lon, lat), 4326)
+    API->>PostGIS: ST_Contains(geo_zones.polygon, point)
+    PostGIS-->>API: Active Geofence Zones (Safety, Warning, Danger)
+    API->>Risk: Calculate Risk Score (Geofence + Profile + Velocity)
+    Risk-->>API: Risk Assessment Result
+    API->>WS: Broadcast sanitized location & risk payload
+    WS-->>Authority: Live Map Update
+    API-->>Tourist: 201 Created (Location Point + Zone Warnings)
 ```
 
 ---
 
-## 3. Geofence State Transition Truth Table
-
-To eliminate alert spamming, the transition engine enforces strict edge-triggered events:
-
-| Previous State | Current Containment | State Change? | Event Emitted | Audit Record Created |
-|---|---|---|---|---|
-| `OUTSIDE` (or none) | `INSIDE` | Yes | `ENTER` | Yes |
-| `INSIDE` | `INSIDE` | No | *None* | No |
-| `INSIDE` | `OUTSIDE` | Yes | `EXIT` | Yes |
-| `OUTSIDE` | `OUTSIDE` | No | *None* | No |
-
----
-
-## 4. Location Freshness Classification
-
-Telemetry displayed on the Authority Dashboard is classified dynamically based on `recorded_at` relative to current server time:
-
-| Freshness Level | Age Threshold | UI Visualization | Operational Status |
-|---|---|---|---|
-| **`LIVE`** | `< 60 seconds` | Emerald pulse marker | Active real-time tracking |
-| **`RECENT`** | `60s – 300s (5 min)` | Blue marker | Normal GPS intermittent ping |
-| **`STALE`** | `300s – 1800s (30 min)`| Amber warning marker | Possible signal loss or battery-saving |
-| **`UNKNOWN`** | `> 1800s (30 min)` | Muted gray marker | Disconnected / Stale journey |
-
----
-
-## 5. Security & Isolation Invariants
-
-- **Token Bound**: `tourist_id` is never read from untrusted client payloads; it is strictly derived from the verified JWT `sub` claim.
-- **Trip Isolation**: Location points cannot be recorded against trips owned by other tourists or trips not currently in `ACTIVE` state.
-- **WebSocket RBAC**: WebSocket connections to `/api/v1/ws/authority` require valid authentication and are restricted to users with `AUTHORITY` or `ADMIN` roles. Unauthorized clients receive close code `1008 Policy Violation`.
-- **Sanitized Telemetry**: WebSocket location frames broadcast minimal operational payloads (coordinates, accuracy, timestamp, trip ID) without broadcasting sensitive identity hashes or medical notes.
-
----
-
-## 6. v0.4 Emergency Response & Incident Lifecycle Pipeline
+## 3. v0.4 Emergency Response & Incident Lifecycle Pipeline
 
 ```mermaid
 sequenceDiagram
@@ -197,3 +125,53 @@ sequenceDiagram
     API->>WS: Broadcast INCIDENT_STATUS_CHANGED
 ```
 
+---
+
+## 4. v0.7 Advanced Audit & Cryptographic Trust Pipeline
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Actor as Authenticated User (Tourist / Responder / Admin)
+    participant API as FastAPI Endpoint Layer
+    participant Service as Business Domain Service
+    participant AuditSvc as AuditService & Engine
+    participant Hasher as AuditHasher (SHA-256)
+    participant DB as PostgreSQL (audit_events Table)
+    participant Verifier as AuditChainVerifier
+    participant Anchor as TrustAnchor Adapter (Modular)
+
+    Actor->>API: Sensitive Operation (Auth, SOS, Transition, Location Read, Export)
+    API->>Service: Execute Domain Logic
+    Service->>DB: Apply & Commit Business Mutation
+    
+    %% Audit Chaining Step
+    Service->>AuditSvc: log_event(event_type, actor, resource, details)
+    AuditSvc->>DB: Fetch Latest Event (get last event_hash & sequence_number)
+    DB-->>AuditSvc: previous_hash (or GENESIS_HASH if seq #1)
+    
+    AuditSvc->>Hasher: calculate_event_hash(canonical_payload, previous_hash)
+    Hasher->>Hasher: Sort keys, format ISO UTC timestamps, compute SHA-256
+    Hasher-->>AuditSvc: event_hash
+    
+    AuditSvc->>DB: INSERT INTO audit_events (seq, type, actor_id, details, prev_hash, event_hash)
+    DB-->>AuditSvc: Persisted
+    AuditSvc-->>Service: Event recorded
+
+    %% Verification & Trust Anchoring
+    opt On-Demand Chain Verification (Admin/Auditor)
+        Actor->>API: POST /api/v1/audit/verify
+        API->>AuditSvc: verify_chain()
+        AuditSvc->>DB: Query all AuditEvents ORDER BY sequence_number ASC
+        DB-->>AuditSvc: Event Sequence
+        AuditSvc->>Verifier: verify_chain(events)
+        Verifier->>Verifier: Check genesis, forward pointers & payload digests
+        Verifier-->>AuditSvc: ChainVerificationResult (CHAIN_VALID / CHAIN_BROKEN)
+        AuditSvc-->>API: 200 OK (Verification Report)
+    end
+
+    opt Periodic Trust Checkpointing
+        AuditSvc->>Anchor: anchor_checkpoint(sequence_number, event_hash)
+        Anchor-->>AuditSvc: Checkpoint confirmation (Idempotent digest submission)
+    end
+```

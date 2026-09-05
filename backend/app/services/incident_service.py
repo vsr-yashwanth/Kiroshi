@@ -15,6 +15,8 @@ from backend.app.domain.models.enums import (
     UserRole,
     EmergencyStatus,
     TripStatus,
+    AuditEventType,
+    AuditOutcome,
 )
 from backend.app.domain.models.incident import Incident
 from backend.app.domain.models.incident_event import IncidentEvent
@@ -25,6 +27,7 @@ from backend.app.repositories.incident_repository import IncidentRepository
 from backend.app.repositories.location_repository import LocationRepository
 from backend.app.repositories.trip_repository import TripRepository
 from backend.app.repositories.user_repository import UserRepository
+from backend.app.repositories.audit_repository import AuditRepository
 from backend.app.services.incident_state_machine import IncidentStateMachine
 from backend.app.services.notification_service import NotificationService
 from backend.app.services.websocket_manager import ws_manager
@@ -37,6 +40,7 @@ class IncidentService:
         self.location_repo = LocationRepository(db)
         self.trip_repo = TripRepository(db)
         self.user_repo = UserRepository(db)
+        self.audit_repo = AuditRepository(db)
         self.notification_service = NotificationService(db)
 
     async def create_sos(
@@ -118,7 +122,7 @@ class IncidentService:
         )
         saved = self.incident_repo.create(incident)
 
-        # 5. Create Initial IncidentEvent
+        # 5. Create Initial IncidentEvent and Cryptographic AuditEvent
         event = IncidentEvent(
             incident_id=saved.id,
             actor_id=current_user.id,
@@ -135,6 +139,23 @@ class IncidentService:
             },
         )
         self.incident_repo.create_event(event)
+
+        self.audit_repo.create_event(
+            event_type=AuditEventType.INCIDENT_CREATE,
+            action="CREATE_SOS",
+            resource_type="INCIDENT",
+            resource_id=str(saved.id),
+            actor_id=current_user.id,
+            actor_email=current_user.email,
+            actor_role=current_user.role.value,
+            outcome=AuditOutcome.SUCCESS,
+            details={
+                "source": "SOS",
+                "severity": "CRITICAL",
+                "trip_id": str(trip_id) if trip_id else None,
+                "idempotency_key": idempotency_key,
+            },
+        )
 
         # 6. Fault-tolerant Notifications & WebSocket Broadcast
         try:
@@ -310,7 +331,7 @@ class IncidentService:
         elif to_status == IncidentStatus.DISMISSED:
             event_type = IncidentEventType.INCIDENT_DISMISSED
 
-        # 4. Append-Only Incident Event Audit Record
+        # 4. Append-Only Incident Event and Cryptographic Audit Record
         audit_event = IncidentEvent(
             incident_id=saved.id,
             actor_id=actor.id,
@@ -322,6 +343,23 @@ class IncidentService:
             details={"resolution_notes": resolution_notes} if resolution_notes else {},
         )
         self.incident_repo.create_event(audit_event)
+
+        self.audit_repo.create_event(
+            event_type=AuditEventType.INCIDENT_STATE_TRANSITION,
+            action=f"TRANSITION_{to_status.value}",
+            resource_type="INCIDENT",
+            resource_id=str(saved.id),
+            actor_id=actor.id,
+            actor_email=actor.email,
+            actor_role=actor.role.value,
+            outcome=AuditOutcome.SUCCESS,
+            details={
+                "from_status": from_status.value,
+                "to_status": to_status.value,
+                "reason": reason,
+                "resolution_notes": resolution_notes,
+            },
+        )
 
         # 5. Notify Relevant Parties & WebSocket Broadcast
         try:
@@ -422,7 +460,7 @@ class IncidentService:
 
         saved = self.incident_repo.update(incident)
 
-        # 4. Audit Event
+        # 4. Audit Event & Cryptographic Audit Log
         event = IncidentEvent(
             incident_id=incident.id,
             actor_id=assigned_by.id,
@@ -434,6 +472,22 @@ class IncidentService:
             details={"responder_id": str(responder.id), "notes": notes},
         )
         self.incident_repo.create_event(event)
+
+        self.audit_repo.create_event(
+            event_type=AuditEventType.INCIDENT_ASSIGNMENT,
+            action="ASSIGN_RESPONDER",
+            resource_type="INCIDENT",
+            resource_id=str(incident.id),
+            actor_id=assigned_by.id,
+            actor_email=assigned_by.email,
+            actor_role=assigned_by.role.value,
+            outcome=AuditOutcome.SUCCESS,
+            details={
+                "responder_id": str(responder.id),
+                "responder_name": responder.full_name,
+                "notes": notes,
+            },
+        )
 
         # 5. Notify Assigned Responder & Broadcast
         try:

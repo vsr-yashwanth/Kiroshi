@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.7.0] — 2026-09-05
+
+### Added
+- **Cryptographic Audit Hash Chaining Engine (`backend/app/engines/audit/`)**: Deterministic SHA-256 forward pointer chaining (`AuditEvent`) linking every security-sensitive event to the preceding record with canonical JSON serialization and normalized UTC timestamps.
+- **Audit Verification & Tamper Detection (`AuditChainVerifier`)**: Automated verification engine detecting payload tampering, broken previous hashes, deleted records, and reordered logs, returning explicit verification reports (`CHAIN_VALID` / `CHAIN_BROKEN` at sequence `#N`).
+- **Comprehensive Security Instrumentation**:
+  - `auth_service`: Audits login attempts, successes, failures, and logouts with IP and user agent.
+  - `tourist_service`: Audits profile read, profile update, and privacy consent status modifications.
+  - `location_service`: Audits location history queries and active spatial snapshot exports.
+  - `incident_service`: Audits SOS dispatches, authoritative state machine transitions, and responder assignments.
+  - `cctv_service`: Audits scoped CCTV footage investigation queries.
+- **Audit REST API Endpoints (`backend/app/api/v1/endpoints/audit.py`)**:
+  - `GET /api/v1/audit/events`: Paginated, filterable event inspection for administrators and authorities.
+  - `POST /api/v1/audit/verify`: On-demand cryptographic chain verification.
+  - `POST /api/v1/audit/export`: Audited security export with immutable logging of the export action itself.
+- **Modular Trust Anchoring Adapter (`TrustAnchor`)**: Interface and implementations (`LocalTrustAnchor`, `SimulatedExternalRegistryAnchor`) supporting isolated periodic checkpoint anchoring.
+- **Database Schema Migration (`d74e9301f203_add_v07_audit_events_table.py`)**: Persistent `audit_events` table with unique sequence numbers, foreign key nullability on account deletion, and indexes.
+- **Full Documentation Suite**: Created `DATA_CLASSIFICATION.md`, `AUDIT_ARCHITECTURE_DECISION.md`, `THREAT_MODEL.md`, `DISASTER_RECOVERY.md`, and updated `SECURITY.md`, `PRIVACY.md`, `SYSTEM_FLOW.md`.
+- **Automated Verification Test Suite**: Added `test_audit_crypto.py`, `test_audit_tamper_detection.py`, `test_audit_api.py`, and `test_e2e_v07_audit_workflow.py` (102/102 backend tests passing across v0.1–v0.7).
+
+### Architecture Decisions
+- **Blockchain Dependency Rejected for Core Platform**: Evaluated across 4 options and rejected direct blockchain integration for v0.7 core to eliminate life-critical SOS latency bottlenecks, gas token overhead, external RPC availability risks, and permanent PII immutability hazards.
+- **Privacy & GDPR Right to Erasure**: Enforced `ON DELETE SET NULL` on `actor_id` and zero PII payloads in audit fields, ensuring tourist deletion does not break cryptographic hash chain continuity.
+
+---
+
 ## [0.6.0] — 2026-09-05
 
 ### Added
