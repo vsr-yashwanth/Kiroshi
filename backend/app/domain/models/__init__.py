@@ -18,6 +18,11 @@ from backend.app.domain.models.enums import (
     NotificationDeliveryStatus,
     SyncEventType,
     SyncEventStatus,
+    CameraStatus,
+    InvestigationStatus,
+    AuditEventType,
+    AuditOutcome,
+    TrustAnchorStatus,
 )
 from backend.app.domain.models.base import TimestampMixin, UUIDModel
 from backend.app.domain.models.user import User
@@ -33,6 +38,9 @@ from backend.app.domain.models.incident_event import IncidentEvent
 from backend.app.domain.models.incident_assignment import IncidentAssignment
 from backend.app.domain.models.notification import Notification
 from backend.app.domain.models.sync_record import SyncRecord
+from backend.app.domain.models.camera import Camera
+from backend.app.domain.models.cctv_investigation import CCTVInvestigation
+from backend.app.domain.models.audit_event import AuditEvent
 
 __all__ = [
     "Base",
@@ -54,6 +62,11 @@ __all__ = [
     "NotificationDeliveryStatus",
     "SyncEventType",
     "SyncEventStatus",
+    "CameraStatus",
+    "InvestigationStatus",
+    "AuditEventType",
+    "AuditOutcome",
+    "TrustAnchorStatus",
     "TimestampMixin",
     "UUIDModel",
     "User",
@@ -70,5 +83,8 @@ __all__ = [
     "IncidentAssignment",
     "Notification",
     "SyncRecord",
+    "Camera",
+    "CCTVInvestigation",
+    "AuditEvent",
 ]
 

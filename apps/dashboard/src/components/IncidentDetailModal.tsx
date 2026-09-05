@@ -27,6 +27,22 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
   const [actionNotes, setActionNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [cctvLoading, setCctvLoading] = useState(false);
+  const [cctvResult, setCctvResult] = useState<any | null>(null);
+
+  const handleInvestigateCCTV = async () => {
+    try {
+      setCctvLoading(true);
+      setErrorMsg(null);
+      const res = await api.investigateIncidentCCTV(incident.id, 300, 5, 5);
+      setCctvResult(res);
+      await fetchTimeline();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'CCTV investigation failed.');
+    } finally {
+      setCctvLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchTimeline();
@@ -244,6 +260,38 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
                     {incident.assigned_responder_name || 'Unassigned'}
                   </span>
                 </div>
+              </div>
+
+              {/* v0.6 Scoped CCTV Investigation Trigger */}
+              <div className="pt-2 border-t border-slate-800/60">
+                <button
+                  type="button"
+                  disabled={cctvLoading}
+                  onClick={handleInvestigateCCTV}
+                  className="w-full py-2 px-3 text-xs font-semibold rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/40 transition-all flex items-center justify-center gap-1.5"
+                >
+                  {cctvLoading ? '🔍 Scanning Nearby Cameras & ML Fall Kinematics...' : '📹 Scoped CCTV Investigation (v0.6 ML)'}
+                </button>
+
+                {cctvResult && (
+                  <div className="mt-2.5 p-2.5 bg-slate-900/90 rounded-lg border border-indigo-500/30 text-xs space-y-1">
+                    <div className="flex justify-between font-semibold">
+                      <span className="text-indigo-300">Status: {cctvResult.status}</span>
+                      <span className="text-slate-400">{cctvResult.cameras_queried_count} Camera(s) Queried</span>
+                    </div>
+                    <p className="text-slate-300">{cctvResult.summary}</p>
+                    {cctvResult.detection_results?.length > 0 && (
+                      <div className="space-y-1 pt-1">
+                        {cctvResult.detection_results.map((det: any, idx: number) => (
+                          <div key={idx} className="p-1.5 bg-slate-950 rounded border border-slate-800 text-[11px] text-slate-300">
+                            <span className="font-bold text-cyan-400">[{det.camera_name || 'Camera'}]</span>: {det.detection_type} (conf: {((det.confidence || 0) * 100).toFixed(0)}%)
+                            {det.explanation && <p className="text-slate-400 italic text-[10px] mt-0.5">"{det.explanation}"</p>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

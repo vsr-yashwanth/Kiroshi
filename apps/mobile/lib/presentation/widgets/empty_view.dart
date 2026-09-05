@@ -7,11 +7,11 @@ class EmptyView extends StatelessWidget {
   final IconData icon;
 
   const EmptyView({
-    Key? key,
+    super.key,
     required this.title,
     required this.message,
     this.icon = Icons.inbox_outlined,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -63,12 +63,29 @@ class RiskSignalType(str, enum.Enum):
     UNUSUAL_SPEED = "UNUSUAL_SPEED"
     UNUSUAL_MOVEMENT = "UNUSUAL_MOVEMENT"
     ZONE_EVENT = "ZONE_EVENT"
+    POSSIBLE_FALL = "POSSIBLE_FALL"
+
+
+class CameraStatus(str, enum.Enum):
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    MAINTENANCE = "MAINTENANCE"
+    SIMULATED = "SIMULATED"
+
+
+class InvestigationStatus(str, enum.Enum):
+    REQUESTED = "REQUESTED"
+    PROCESSING = "PROCESSING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    NO_FOOTAGE_AVAILABLE = "NO_FOOTAGE_AVAILABLE"
 
 
 class IncidentSource(str, enum.Enum):
     SOS = "SOS"
     RISK_ENGINE = "RISK_ENGINE"
     AUTHORITY = "AUTHORITY"
+    CCTV_INVESTIGATION = "CCTV_INVESTIGATION"
     SYSTEM = "SYSTEM"
 
 
@@ -137,6 +154,57 @@ class SyncEventStatus(str, enum.Enum):
     REJECTED = "REJECTED"
     CONFLICT = "CONFLICT"
     ERROR = "ERROR"
+
+
+class AuditEventType(str, enum.Enum):
+    # Authentication events
+    AUTH_LOGIN_SUCCESS = "AUTH_LOGIN_SUCCESS"
+    AUTH_LOGIN_FAILURE = "AUTH_LOGIN_FAILURE"
+    AUTH_LOGOUT = "AUTH_LOGOUT"
+    AUTH_REGISTER = "AUTH_REGISTER"
+    
+    # Profile & Consent access
+    PROFILE_READ = "PROFILE_READ"
+    PROFILE_UPDATE = "PROFILE_UPDATE"
+    PROFILE_CONSENT_CHANGE = "PROFILE_CONSENT_CHANGE"
+    
+    # Sensitive Location data access
+    LOCATION_HISTORY_READ = "LOCATION_HISTORY_READ"
+    LOCATION_ACTIVE_SNAPSHOT_READ = "LOCATION_ACTIVE_SNAPSHOT_READ"
+    
+    # Incident lifecycle & state transitions
+    INCIDENT_CREATE = "INCIDENT_CREATE"
+    INCIDENT_MODIFY = "INCIDENT_MODIFY"
+    INCIDENT_STATE_TRANSITION = "INCIDENT_STATE_TRANSITION"
+    INCIDENT_ASSIGNMENT = "INCIDENT_ASSIGNMENT"
+    INCIDENT_DISMISSAL = "INCIDENT_DISMISSAL"
+    
+    # Privilege & Permission modifications
+    ROLE_CHANGE = "ROLE_CHANGE"
+    USER_STATUS_CHANGE = "USER_STATUS_CHANGE"
+    
+    # CCTV & Investigation operations
+    CCTV_INVESTIGATION_REQUEST = "CCTV_INVESTIGATION_REQUEST"
+    CCTV_INVESTIGATION_COMPLETED = "CCTV_INVESTIGATION_COMPLETED"
+    
+    # Data Export
+    DATA_EXPORT = "DATA_EXPORT"
+    
+    # Audit chain verification
+    AUDIT_CHAIN_VERIFY = "AUDIT_CHAIN_VERIFY"
+
+
+class AuditOutcome(str, enum.Enum):
+    SUCCESS = "SUCCESS"
+    FAILURE = "FAILURE"
+    DENIED = "DENIED"
+
+
+class TrustAnchorStatus(str, enum.Enum):
+    ANCHORED = "ANCHORED"
+    PENDING = "PENDING"
+    FAILED = "FAILED"
+    DISABLED = "DISABLED"
 
 
 

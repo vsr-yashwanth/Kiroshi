@@ -60,4 +60,4 @@ def get_active_tourists_live(
     db: Session = Depends(get_db),
 ):
     service = LocationService(db)
-    return service.get_active_tourists_snapshot()
+    return service.get_active_tourists_snapshot(requesting_user=current_user)

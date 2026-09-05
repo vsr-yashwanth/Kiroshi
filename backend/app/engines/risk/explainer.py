@@ -71,8 +71,15 @@ class RiskExplainer:
         if has_zone_event:
             phrases.append("recent boundary entry event logged")
 
+        # Computer Vision fall signal
+        fall_sig = next((s for s in active_signals if s.signal_type == RiskSignalType.POSSIBLE_FALL), None)
+        if fall_sig:
+            phrases.append(f"computer vision detected possible fall kinematics ({fall_sig.raw_value})")
+
         # Compound sentence construction
-        if len(phrases) == 1:
+        if not phrases:
+            body = "Detected operational telemetry variances"
+        elif len(phrases) == 1:
             body = phrases[0].capitalize()
         elif len(phrases) == 2:
             body = f"{phrases[0].capitalize()} combined with {phrases[1]}"

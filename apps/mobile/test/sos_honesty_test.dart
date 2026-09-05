@@ -19,8 +19,8 @@ class MockOnlineConnectivityService extends ConnectivityService {
 class MockSuccessApiClient extends ApiClient {
   @override
   Future<dynamic> post(
-    String endpoint, {
-    Map<String, dynamic>? body,
+    String url, {
+    dynamic body,
     bool requireAuth = true,
   }) async {
     return {

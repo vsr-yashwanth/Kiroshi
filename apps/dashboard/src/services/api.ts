@@ -229,6 +229,36 @@ export const api = {
     });
     return handleResponse(res);
   },
+
+  // CCTV / Computer Vision (v0.6)
+  listNearbyCameras: async (latitude: number, longitude: number, radiusMeters = 300): Promise<any[]> => {
+    const res = await fetch(
+      `${API_BASE}/cctv/cameras/nearby?latitude=${latitude}&longitude=${longitude}&radius_meters=${radiusMeters}`,
+      {
+        headers: getAuthHeaders(),
+      }
+    );
+    return handleResponse(res);
+  },
+
+  investigateIncidentCCTV: async (
+    incidentId: string,
+    searchRadiusMeters = 300,
+    minutesBefore = 5,
+    minutesAfter = 5
+  ): Promise<any> => {
+    const res = await fetch(`${API_BASE}/cctv/investigate`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        incident_id: incidentId,
+        search_radius_meters: searchRadiusMeters,
+        time_window_minutes_before: minutesBefore,
+        time_window_minutes_after: minutesAfter,
+      }),
+    });
+    return handleResponse(res);
+  },
 };
 
 

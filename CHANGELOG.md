@@ -7,6 +7,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.0] — 2026-09-05
+
+### Added
+- **Production Observability & Structured JSON Logging (`backend/app/core/logging.py`)**: Standardized JSON log formatter with automatic timestamping, module resolution, and credential redaction.
+- **Request Tracing Middleware (`backend/app/main.py`)**: Injected `X-Request-ID` correlation headers and measured millisecond response latency headers (`X-Response-Time-MS`).
+- **Readiness Probe (`GET /ready`)**: Dedicated probe for container orchestrators and load balancers verifying PostgreSQL connection pool health.
+- **Database Connection Pooling**: Configured `pool_size=10`, `max_overflow=20`, `pool_timeout=30`, `pool_recycle=1800`, and `pool_pre_ping=True` in `backend/app/core/database.py`.
+- **Comprehensive Benchmark Suite (`backend/tests/test_performance_benchmarks.py`)**: Measured and validated sub-millisecond latencies for Risk Engine (<0.04ms), Fall Detector (<0.05ms), and Audit Hasher (<0.02ms).
+- **Security Hardening Test Suite (`backend/tests/test_security_hardening.py`)**: Automated verification of 401 unauthenticated rejections, RBAC role boundaries, and 422 malformed payload error sanitization.
+- **Root Docker Compose Environment (`docker-compose.yml`)**: One-command reproducible local and production deployment orchestrating PostGIS 16 and FastAPI backend.
+- **Documentation & Architecture Diagrams**: Published `PORTFOLIO_REVIEW.md`, `V1_RELEASE_REPORT.md`, updated `SYSTEM_FLOW.md`, and refreshed `README.md`.
+
+### Hardened
+- All 110 automated backend tests verified passing with 100% success across all historical milestones (v0.1 through v1.0).
+- Frontend builds verified for React Authority Dashboard (`npm run build`) and Flutter Mobile client (`pubspec.yaml` bumped to `1.0.0+1`).
+
+---
+
+## [0.7.0] — 2026-09-05
+
+### Added
+- **Cryptographic Audit Hash Chaining Engine (`backend/app/engines/audit/`)**: Deterministic SHA-256 forward pointer chaining (`AuditEvent`) linking every security-sensitive event to the preceding record with canonical JSON serialization and normalized UTC timestamps.
+- **Audit Verification & Tamper Detection (`AuditChainVerifier`)**: Automated verification engine detecting payload tampering, broken previous hashes, deleted records, and reordered logs, returning explicit verification reports (`CHAIN_VALID` / `CHAIN_BROKEN` at sequence `#N`).
+- **Comprehensive Security Instrumentation**:
+  - `auth_service`: Audits login attempts, successes, failures, and logouts with IP and user agent.
+  - `tourist_service`: Audits profile read, profile update, and privacy consent status modifications.
+  - `location_service`: Audits location history queries and active spatial snapshot exports.
+  - `incident_service`: Audits SOS dispatches, authoritative state machine transitions, and responder assignments.
+  - `cctv_service`: Audits scoped CCTV footage investigation queries.
+- **Audit REST API Endpoints (`backend/app/api/v1/endpoints/audit.py`)**:
+  - `GET /api/v1/audit/events`: Paginated, filterable event inspection for administrators and authorities.
+  - `POST /api/v1/audit/verify`: On-demand cryptographic chain verification.
+  - `POST /api/v1/audit/export`: Audited security export with immutable logging of the export action itself.
+- **Modular Trust Anchoring Adapter (`TrustAnchor`)**: Interface and implementations (`LocalTrustAnchor`, `SimulatedExternalRegistryAnchor`) supporting isolated periodic checkpoint anchoring.
+- **Database Schema Migration (`d74e9301f203_add_v07_audit_events_table.py`)**: Persistent `audit_events` table with unique sequence numbers, foreign key nullability on account deletion, and indexes.
+- **Full Documentation Suite**: Created `DATA_CLASSIFICATION.md`, `AUDIT_ARCHITECTURE_DECISION.md`, `THREAT_MODEL.md`, `DISASTER_RECOVERY.md`, and updated `SECURITY.md`, `PRIVACY.md`, `SYSTEM_FLOW.md`.
+- **Automated Verification Test Suite**: Added `test_audit_crypto.py`, `test_audit_tamper_detection.py`, `test_audit_api.py`, and `test_e2e_v07_audit_workflow.py` (102/102 backend tests passing across v0.1–v0.7).
+
+### Architecture Decisions
+- **Blockchain Dependency Rejected for Core Platform**: Evaluated across 4 options and rejected direct blockchain integration for v0.7 core to eliminate life-critical SOS latency bottlenecks, gas token overhead, external RPC availability risks, and permanent PII immutability hazards.
+- **Privacy & GDPR Right to Erasure**: Enforced `ON DELETE SET NULL` on `actor_id` and zero PII payloads in audit fields, ensuring tourist deletion does not break cryptographic hash chain continuity.
+
+---
+
+## [0.6.0] — 2026-09-05
+
+### Added
+- **Computer Vision & Fall Detection Engine (`ml/models/fall_detector.py`)**: Modular, explainable fall detection algorithm evaluating posture aspect ratios ($w/h > 0.95$), torso angles ($< 45^\circ$), vertical kinematic descent velocity ($> 0.25/\text{s}$), and prolonged ground dwell times ($> 1000\text{ms}$).
+- **Decoupled ML Interface & Versioning (`ml/interfaces.py`)**: Standardized `DetectionResult` contract tracking `model_name` (`kiroshi-fall-detector`), `model_version` (`0.6.0`), calibrated confidence scores, and natural language explanations.
+- **Critical Safety Guardrail**: Strict enforcement that Computer Vision outputs `POSSIBLE_FALL` and NEVER automatically claims `CONFIRMED_EMERGENCY`.
+- **CCTV Domain Models & Migration (`Camera`, `CCTVInvestigation`)**: PostGIS-backed camera inventory with spatial GIST index and `cctv_investigations` audit table (Alembic migration `c63e8290f102`).
+- **PostGIS Proximity Search & Scoped Investigation (`CCTVService`)**: Spatial discovery of cameras within `search_radius_meters` via `ST_DWithin` / `ST_Distance` and time-bounded footage analysis ($\pm 5$ minutes).
+- **CCTV API Endpoints (`backend/app/api/v1/endpoints/cctv.py`)**: RBAC-protected endpoints for camera registration, proximity search, and scoped incident investigation.
+- **Risk Engine Integration (`backend/app/engines/risk/`)**: Optional incorporation of `POSSIBLE_FALL` signals into the transparent risk evaluator without coupling core safety to ML availability.
+- **Authority Dashboard CCTV Console (`IncidentDetailModal.tsx`)**: One-click scoped CCTV investigation trigger displaying camera count, status, and explainable fall evidence directly within the incident operations modal.
+- **Reproducible Evaluation & Benchmarks (`ml/evaluation/evaluate.py`)**: Measured benchmark calculating precision (100%), recall (100%), F1 score (1.0000), and mean inference latency (0.031ms).
+- **Comprehensive Documentation**: Added `FALL_DETECTION.md`, `CCTV.md`, `ML.md`, and `DATASETS.md` in `docs/05-intelligence/`.
+- **Automated Test Suite**: Added `test_fall_detection.py`, `test_cctv_api.py`, and `test_e2e_v06_cv_workflow.py` (90/90 backend tests passing).
+
+### Security & Privacy
+- Zero facial recognition, biometric indexing, or indiscriminate surveillance.
+- CCTV investigations are strictly **Incident-Scoped**, **Location-Scoped**, **Time-Scoped**, and **Authorization-Scoped**.
+- Tamper-evident audit logging for every investigation query and camera search.
+- Full ML failure isolation: core backend, authentication, GPS, and emergency SOS dispatch remain 100% operational if ML times out, fails, or is disabled.
+
+---
+
 ## [0.5.0] — 2026-09-05
 
 ### Added

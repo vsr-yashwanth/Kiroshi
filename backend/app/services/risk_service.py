@@ -44,6 +44,7 @@ class RiskService:
         active_zones: list[GeoZone],
         recent_zone_events: list[ZoneEvent] | None = None,
         freshness: LocationFreshness = LocationFreshness.LIVE,
+        cv_detection: dict | None = None,
     ) -> RiskAssessment:
         # 1. Gather itinerary waypoints (ordered by sequence_order)
         waypoints = []
@@ -91,6 +92,7 @@ class RiskService:
             active_zones=active_zone_dicts,
             location_history=location_history,
             recent_zone_events=recent_event_dicts,
+            cv_detection=cv_detection,
         )
 
         # 7. Persist RiskAssessment

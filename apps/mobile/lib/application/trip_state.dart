@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../core/constants/endpoints.dart';
 import '../core/network/api_client.dart';
 import '../core/storage/offline_cache_service.dart';

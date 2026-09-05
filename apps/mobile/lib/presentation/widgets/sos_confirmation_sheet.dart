@@ -4,7 +4,7 @@ import '../../core/services/sos_service.dart';
 class SosConfirmationSheet extends StatefulWidget {
   final String? activeTripId;
 
-  const SosConfirmationSheet({Key? key, this.activeTripId}) : super(key: key);
+  const SosConfirmationSheet({super.key, this.activeTripId});
 
   static Future<void> show(BuildContext context, {String? activeTripId}) {
     return showModalBottomSheet(

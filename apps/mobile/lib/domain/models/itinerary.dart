@@ -34,7 +34,11 @@ class ItineraryModel {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
+      'trip_id': tripId,
       'destination_name': destinationName,
+      'planned_arrival': plannedArrival?.toIso8601String(),
+      'planned_departure': plannedDeparture?.toIso8601String(),
       'latitude': latitude,
       'longitude': longitude,
       'sequence_order': sequenceOrder,

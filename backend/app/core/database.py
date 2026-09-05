@@ -4,16 +4,23 @@ from backend.app.core.config import settings
 
 is_sqlite = settings.DATABASE_URL.startswith("sqlite")
 
-connect_args = {}
-if is_sqlite:
-    connect_args = {"check_same_thread": False}
+engine_kwargs = {
+    "echo": False,
+    "future": True,
+}
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args=connect_args,
-    echo=False,
-    future=True,
-)
+if is_sqlite:
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+else:
+    engine_kwargs.update({
+        "pool_size": settings.DB_POOL_SIZE,
+        "max_overflow": settings.DB_MAX_OVERFLOW,
+        "pool_timeout": settings.DB_POOL_TIMEOUT,
+        "pool_recycle": settings.DB_POOL_RECYCLE,
+        "pool_pre_ping": True,
+    })
+
+engine = create_engine(settings.DATABASE_URL, **engine_kwargs)
 
 # Enforce foreign key constraints in SQLite and configure GeoAlchemy2 fallback
 if is_sqlite:
@@ -24,8 +31,8 @@ if is_sqlite:
             if ";" in val:
                 val = val.split(";", 1)[1]
             try:
-                import shapely.wkt
-                import shapely.wkb
+                import shapely.wkt  # type: ignore
+                import shapely.wkb  # type: ignore
                 geom = shapely.wkt.loads(val)
                 return shapely.wkb.dumps(geom, hex=True, srid=4326)
             except Exception:

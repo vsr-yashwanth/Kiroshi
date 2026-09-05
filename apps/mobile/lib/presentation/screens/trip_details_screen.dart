@@ -8,7 +8,7 @@ import 'live_tracking_screen.dart';
 class TripDetailsScreen extends StatefulWidget {
   final String tripId;
 
-  const TripDetailsScreen({Key? key, required this.tripId}) : super(key: key);
+  const TripDetailsScreen({super.key, required this.tripId});
 
   @override
   State<TripDetailsScreen> createState() => _TripDetailsScreenState();
@@ -158,11 +158,12 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                 onPressed: _isProcessing
                     ? null
                     : () async {
+                        final messenger = ScaffoldMessenger.of(context);
                         setState(() => _isProcessing = true);
                         final ok = await tripState.startTrip(trip.id);
                         setState(() => _isProcessing = false);
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             SnackBar(
                               content: Text(ok ? 'Trip is now ACTIVE! Safe travels.' : 'Failed to start trip.'),
                               backgroundColor: ok ? AppColors.success : AppColors.danger,
@@ -202,11 +203,12 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                 onPressed: _isProcessing
                     ? null
                     : () async {
+                        final messenger = ScaffoldMessenger.of(context);
                         setState(() => _isProcessing = true);
                         final ok = await tripState.stopTrip(trip.id);
                         setState(() => _isProcessing = false);
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             SnackBar(
                               content: Text(ok ? 'Expedition concluded.' : 'Failed to conclude trip.'),
                               backgroundColor: ok ? AppColors.primary : AppColors.danger,

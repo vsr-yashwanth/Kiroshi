@@ -16,6 +16,7 @@ from backend.app.engines.risk.signals import (
     InactivityEvaluator,
     MovementSpeedEvaluator,
     ZoneEventSignalEvaluator,
+    FallDetectionSignalEvaluator,
 )
 from backend.app.engines.risk.explainer import RiskExplainer
 
@@ -109,6 +110,7 @@ class RiskEvaluator:
         active_zones: List[Dict[str, Any]],
         location_history: List[Any],
         recent_zone_events: Optional[List[Dict[str, Any]]] = None,
+        cv_detection: Optional[Dict[str, Any]] = None,
     ) -> RiskEvaluationOutput:
         """Executes transparent deterministic evaluation across extracted signals."""
         extracted_signals: List[SignalResult] = []
@@ -137,6 +139,12 @@ class RiskEvaluator:
             ze_sig = ZoneEventSignalEvaluator.evaluate(recent_zone_events)
             if ze_sig:
                 extracted_signals.append(ze_sig)
+
+        # 6. Optional Computer Vision Signal (Failure isolated; does not create confirmed emergencies)
+        if cv_detection:
+            cv_sig = FallDetectionSignalEvaluator.evaluate(cv_detection)
+            if cv_sig:
+                extracted_signals.append(cv_sig)
 
         # Compute Raw Weighted Score
         raw_score = sum(sig.contribution for sig in extracted_signals)

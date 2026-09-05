@@ -9,9 +9,9 @@ class MobileAppException implements Exception {
 }
 
 class NetworkException extends MobileAppException {
-  NetworkException(String message) : super(message);
+  NetworkException(super.message);
 }
 
 class AuthException extends MobileAppException {
-  AuthException(String message, [int? statusCode]) : super(message, statusCode);
+  AuthException(super.message, [super.statusCode]);
 }

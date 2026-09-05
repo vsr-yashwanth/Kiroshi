@@ -9,7 +9,7 @@ import '../widgets/sos_confirmation_sheet.dart';
 class LiveTrackingScreen extends StatelessWidget {
   final TripModel trip;
 
-  const LiveTrackingScreen({Key? key, required this.trip}) : super(key: key);
+  const LiveTrackingScreen({super.key, required this.trip});
 
   @override
   Widget build(BuildContext context) {
@@ -131,9 +131,9 @@ class LiveTrackingScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: AppColors.border),
                       ),
-                      child: Row(
+                      child: const Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children: [
                           Icon(Icons.shield_outlined, color: AppColors.success, size: 20),
                           SizedBox(width: 10),
                           Expanded(
@@ -186,20 +186,22 @@ class LiveTrackingScreen extends StatelessWidget {
                               : AppColors.success,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
-                    onPressed: () {
-                      if (locationState.status == TrackingStatus.trackingEnabled) {
-                        locationState.stopTracking();
-                      } else {
-                        locationState.startTracking(trip.id);
-                      }
-                    },
-                    child: Text(
-                      locationState.status == TrackingStatus.trackingEnabled
-                          ? 'STOP GPS TRACKING'
-                          : 'ENABLE REAL-TIME TRACKING',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+                        onPressed: () {
+                          if (locationState.status == TrackingStatus.trackingEnabled) {
+                            locationState.stopTracking();
+                          } else {
+                            locationState.startTracking(trip.id);
+                          }
+                        },
+                        child: Text(
+                          locationState.status == TrackingStatus.trackingEnabled
+                              ? 'STOP GPS TRACKING'
+                              : 'ENABLE REAL-TIME TRACKING',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ],
@@ -235,7 +237,6 @@ class LiveTrackingScreen extends StatelessWidget {
         description = 'Device GPS service is currently turned off or unavailable.';
         break;
       case TrackingStatus.trackingDisabled:
-      default:
         bannerColor = AppColors.textMuted;
         icon = Icons.pause_circle_outline;
         title = 'TRACKING DISABLED';

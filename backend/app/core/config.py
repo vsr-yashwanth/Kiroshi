@@ -7,7 +7,7 @@ import os
 class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     PROJECT_NAME: str = "KIROSHI Core Platform"
-    VERSION: str = "0.2.0"
+    VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
 
     # Security
@@ -17,6 +17,10 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str = "sqlite:///./kiroshi.db"
+    DB_POOL_SIZE: int = 10
+    DB_MAX_OVERFLOW: int = 20
+    DB_POOL_TIMEOUT: int = 30
+    DB_POOL_RECYCLE: int = 1800
 
     # Geospatial & Location Freshness
     LOCATION_FRESHNESS_LIVE_SECONDS: int = 30
@@ -31,8 +35,9 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
     ]
 
-    # Logging
+    # Logging & Observability
     LOG_LEVEL: str = "INFO"
+    LOG_FORMAT: str = "json"  # json or text
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -43,3 +48,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+

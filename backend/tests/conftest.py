@@ -67,6 +67,19 @@ def as_ewkb(*args):
     return val
 
 
+def parse_coords_from_point_str(geom_str):
+    if isinstance(geom_str, str):
+        try:
+            if "POINT" in geom_str.upper():
+                s = geom_str.upper().replace("POINT", "").replace("(", "").replace(")", "").strip()
+                parts = s.split()
+                if len(parts) >= 2:
+                    return float(parts[0]), float(parts[1])
+        except Exception:
+            pass
+    return 77.5771, 34.1526
+
+
 @event.listens_for(engine, "connect")
 def register_test_sqlite_udfs(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
@@ -85,6 +98,12 @@ def register_test_sqlite_udfs(dbapi_connection, connection_record):
     dbapi_connection.create_function("InitSpatialMetaData", -1, lambda *args: 1)
     dbapi_connection.create_function("CreateSpatialIndex", -1, lambda *args: 1)
     dbapi_connection.create_function("DisableSpatialIndex", -1, lambda *args: 1)
+    dbapi_connection.create_function("ST_MakePoint", -1, lambda x, y: f"POINT({x} {y})")
+    dbapi_connection.create_function("ST_SetSRID", -1, lambda geom, srid: geom)
+    dbapi_connection.create_function("ST_X", -1, lambda geom: parse_coords_from_point_str(geom)[0])
+    dbapi_connection.create_function("ST_Y", -1, lambda geom: parse_coords_from_point_str(geom)[1])
+    dbapi_connection.create_function("ST_Distance", -1, lambda g1, g2: 50.0)
+    dbapi_connection.create_function("ST_DWithin", -1, lambda g1, g2, dist: 1)
 
 
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -217,6 +236,27 @@ def responder_user(db_session) -> User:
 @pytest.fixture
 def responder_token_headers(responder_user) -> dict:
     token = create_access_token(subject=responder_user.id, role=responder_user.role.value)
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def operator_user(db_session) -> User:
+    user = User(
+        email="operator@example.com",
+        hashed_password=get_password_hash("OperatorPass123!"),
+        full_name="Operator Morgan",
+        role=UserRole.OPERATOR,
+        is_active=True,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def operator_token_headers(operator_user) -> dict:
+    token = create_access_token(subject=operator_user.id, role=operator_user.role.value)
     return {"Authorization": f"Bearer {token}"}
 
 

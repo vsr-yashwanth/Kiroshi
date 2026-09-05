@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
-import '../../domain/models/offline_event.dart';
 import '../constants/endpoints.dart';
 import '../network/api_client.dart';
 import '../storage/offline_event_queue.dart';
