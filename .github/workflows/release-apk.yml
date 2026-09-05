@@ -49,42 +49,42 @@ jobs:
 
       - name: Rename APK with version info
         run: |
-          VERSION="${GITHUB_REF_NAME:-dev}"
+          VERSION="${GITHUB_REF_NAME:-v1.0.0}"
+          if [[ "${VERSION}" == "main" || "${VERSION}" == "dev" ]]; then
+            VERSION="v1.0.0"
+          fi
           mkdir -p releases
           cp apps/mobile/build/app/outputs/flutter-apk/app-debug.apk \
              releases/kiroshi-${VERSION}.apk
           echo "APK_NAME=kiroshi-${VERSION}.apk" >> $GITHUB_ENV
-
-      - name: Commit APK to releases/ folder
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add releases/
-          git diff --cached --quiet || git commit -m "chore(release): add APK build for ${GITHUB_REF_NAME:-dev} [skip ci]"
-          git push origin HEAD:main || echo "Push skipped (detached HEAD on tag build)"
+          echo "RELEASE_TAG=${VERSION}" >> $GITHUB_ENV
 
       - name: Upload APK as Actions Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: kiroshi-mobile-debug
+          name: kiroshi-mobile-apk
           path: releases/${{ env.APK_NAME }}
           retention-days: 30
 
       - name: Attach APK to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.RELEASE_TAG }}
           files: releases/${{ env.APK_NAME }}
-          name: "Kiroshi ${{ github.ref_name }}"
+          name: "KIROSHI ${{ env.RELEASE_TAG }} — Production Release"
+          draft: false
+          prerelease: false
           body: |
-            ## Kiroshi Mobile App — ${{ github.ref_name }}
+            ## KIROSHI Mobile Client — ${{ env.RELEASE_TAG }}
 
-            ### 📱 Installation
-            1. Download `${{ env.APK_NAME }}` below
-            2. On your Android phone, go to **Settings → Install unknown apps** and allow your browser/Files app
-            3. Open the downloaded APK and tap **Install**
+            ### 📱 Android Installation Guide
+            1. Download **`${{ env.APK_NAME }}`** from the Assets below.
+            2. On your Android device, enable **Install unknown apps** for your browser / Files app.
+            3. Open the APK file and tap **Install**.
 
-            > **Note:** This is a debug build for testing. Production signing will be added in a future release.
+            ---
+            *Built automatically via GitHub Actions CI/CD.*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
