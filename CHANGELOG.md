@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.0] — 2026-09-05
+
+### Added
+- **Production Observability & Structured JSON Logging (`backend/app/core/logging.py`)**: Standardized JSON log formatter with automatic timestamping, module resolution, and credential redaction.
+- **Request Tracing Middleware (`backend/app/main.py`)**: Injected `X-Request-ID` correlation headers and measured millisecond response latency headers (`X-Response-Time-MS`).
+- **Readiness Probe (`GET /ready`)**: Dedicated probe for container orchestrators and load balancers verifying PostgreSQL connection pool health.
+- **Database Connection Pooling**: Configured `pool_size=10`, `max_overflow=20`, `pool_timeout=30`, `pool_recycle=1800`, and `pool_pre_ping=True` in `backend/app/core/database.py`.
+- **Comprehensive Benchmark Suite (`backend/tests/test_performance_benchmarks.py`)**: Measured and validated sub-millisecond latencies for Risk Engine (<0.04ms), Fall Detector (<0.05ms), and Audit Hasher (<0.02ms).
+- **Security Hardening Test Suite (`backend/tests/test_security_hardening.py`)**: Automated verification of 401 unauthenticated rejections, RBAC role boundaries, and 422 malformed payload error sanitization.
+- **Root Docker Compose Environment (`docker-compose.yml`)**: One-command reproducible local and production deployment orchestrating PostGIS 16 and FastAPI backend.
+- **Documentation & Architecture Diagrams**: Published `PORTFOLIO_REVIEW.md`, `V1_RELEASE_REPORT.md`, updated `SYSTEM_FLOW.md`, and refreshed `README.md`.
+
+### Hardened
+- All 110 automated backend tests verified passing with 100% success across all historical milestones (v0.1 through v1.0).
+- Frontend builds verified for React Authority Dashboard (`npm run build`) and Flutter Mobile client (`pubspec.yaml` bumped to `1.0.0+1`).
+
+---
+
 ## [0.7.0] — 2026-09-05
 
 ### Added

@@ -1,177 +1,184 @@
-# System Flow — KIROSHI v0.7
+# KIROSHI System Architecture & Subsystem Flows (v1.0)
 
-> Status: IMPLEMENTED (v0.7 Advanced Audit & Trust)
+> Status: IMPLEMENTED (v1.0 Production Release)
 
 ---
 
-## 1. Primary v0.1 Core Onboarding & Lifecycle
+## 1. High-Level System Architecture
 
 ```mermaid
-sequenceDiagram
-    autonumber
-    actor Tourist as Tourist User
-    participant App as Tourist App / API Client
-    participant Backend as FastAPI Backend
-    participant DB as Relational Database
-    actor Authority as Tourism Authority
-    participant Dash as Authority Dashboard
+graph TB
+    subgraph Clients ["Client Applications"]
+        Mobile["Flutter Mobile App (Tourist)"]
+        Dashboard["React TypeScript Console (Authority & Responders)"]
+    end
 
-    %% Registration & Login
-    Note over Tourist, DB: 1. Onboarding & Authentication
-    Tourist->>App: Register (Email, Password, Name, Role=TOURIST)
-    App->>Backend: POST /api/v1/auth/register
-    Backend->>DB: Check unique email & insert User (hashed pw)
-    DB-->>Backend: User created
-    Backend-->>App: 201 Created (User DTO)
+    subgraph Gateway ["API Gateway & Middleware Layer"]
+        FastAPI["FastAPI Application Gateway"]
+        AuthMiddleware["JWT Authentication & RBAC Filter"]
+        Observability["X-Request-ID & Timing Observability"]
+    end
 
-    Tourist->>App: Login (Email, Password)
-    App->>Backend: POST /api/v1/auth/login
-    Backend->>DB: Fetch user by email
-    Backend->>Backend: Verify bcrypt hash & generate JWT
-    Backend-->>App: 200 OK (access_token, token_type=bearer)
+    subgraph CoreServices ["Core Domain & Intelligence Services"]
+        AuthService["Auth & Identity Service"]
+        TouristService["Tourist Profile Service"]
+        TripService["Trip & Itinerary Manager"]
+        LocationService["Location Ingestion & PostGIS Spatial Filter"]
+        RiskEngine["Deterministic Rule-Based Risk Engine"]
+        IncidentService["Authoritative Incident State Machine"]
+        SyncService["Offline-First Sync & Idempotency Manager"]
+        CVService["Fall Detector & Scoped CCTV Analyzer"]
+        AuditService["Cryptographic Audit Chaining Engine"]
+    end
 
-    %% Profile Setup
-    Note over Tourist, DB: 2. Tourist Profile Setup
-    Tourist->>App: Submit Profile (Emergency contacts, Consent)
-    App->>Backend: PUT /api/v1/tourists/me (Bearer Token)
-    Backend->>DB: Upsert TouristProfile for current user
-    DB-->>Backend: Profile saved
-    Backend-->>App: 200 OK (TouristProfile DTO)
+    subgraph Persistence ["Persistence & Storage Layer"]
+        PostgreSQL[("PostgreSQL 16 + PostGIS 3.4")]
+        WAL["Write-Ahead Logging / Encrypted Backups"]
+        TrustAnchor["Trust Anchor Adapter (SHA-256 Checkpoints)"]
+    end
 
-    %% Trip & Itinerary
-    Note over Tourist, DB: 3. Trip Lifecycle
-    Tourist->>App: Create Trip with Itinerary Waypoints
-    App->>Backend: POST /api/v1/trips (Title, Dates, Waypoints)
-    Backend->>DB: Insert Trip (status=PLANNED) + Itinerary records
-    DB-->>Backend: Trip & Itinerary persisted
-    Backend-->>App: 201 Created (Trip DTO)
-
-    Tourist->>App: Press "Start Trip"
-    App->>Backend: POST /api/v1/trips/{id}/start
-    Backend->>Backend: Verify trip ownership & valid transition
-    Backend->>DB: Update Trip (status=ACTIVE)
-    DB-->>Backend: Updated
-    Backend-->>App: 200 OK (status=ACTIVE)
+    Mobile -->|REST API & WebSocket| FastAPI
+    Dashboard -->|REST API & WebSocket| FastAPI
+    FastAPI --> AuthMiddleware --> Observability
+    Observability --> CoreServices
+    CoreServices --> PostgreSQL
+    AuditService --> TrustAnchor
+    PostgreSQL --> WAL
 ```
 
 ---
 
-## 2. v0.2 Real-Time Geospatial & Geofencing Pipeline
+## 2. Location Tracking & Geospatial Pipeline Flow
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Tourist as Tourist Mobile App
-    participant API as FastAPI /api/v1/locations
-    participant PostGIS as PostgreSQL / PostGIS
+    actor Tourist as Tourist Mobile Device
+    participant API as Location Endpoint (/api/v1/location)
+    participant PostGIS as PostgreSQL / PostGIS Engine
     participant Risk as Risk Assessment Engine
     participant WS as WebSocket ConnectionManager
-    actor Authority as Authority Dashboard
+    actor Authority as Authority Monitoring Dashboard
 
-    Tourist->>API: POST /api/v1/locations (lat, lon, accuracy, speed)
+    Tourist->>API: POST Location (lat, lon, speed, accuracy, trip_id)
     API->>PostGIS: ST_SetSRID(ST_MakePoint(lon, lat), 4326)
-    API->>PostGIS: ST_Contains(geo_zones.polygon, point)
-    PostGIS-->>API: Active Geofence Zones (Safety, Warning, Danger)
-    API->>Risk: Calculate Risk Score (Geofence + Profile + Velocity)
-    Risk-->>API: Risk Assessment Result
+    API->>PostGIS: ST_Contains(geozones.polygon, location_point)
+    PostGIS-->>API: Active Safety & Hazard Zones
+    API->>Risk: Calculate Risk Score (Geofence + Velocity + Itinerary)
+    Risk-->>API: Risk Evaluation Result (Score, Level, Explanation)
     API->>WS: Broadcast sanitized location & risk payload
-    WS-->>Authority: Live Map Update
+    WS-->>Authority: Live Map Telemetry Frame
     API-->>Tourist: 201 Created (Location Point + Zone Warnings)
 ```
 
 ---
 
-## 3. v0.4 Emergency Response & Incident Lifecycle Pipeline
+## 3. Explainable Risk Scoring Engine Pipeline Flow
 
 ```mermaid
-sequenceDiagram
-    autonumber
-    actor Tourist as Tourist Mobile App
-    participant API as FastAPI /api/v1/incidents
-    participant DB as PostgreSQL (Incidents & Events)
-    participant WS as WebSocket ConnectionManager
-    actor Authority as Authority Dashboard
-    actor Responder as Field Responder
+graph LR
+    subgraph Inputs ["Real-Time Telemetry Inputs"]
+        GPS["GPS Position & Accuracy"]
+        Waypoints["Itinerary Route Segments"]
+        Zones["Active High-Risk / Restricted Geozones"]
+        History["Movement Velocity & Inactivity History"]
+        CV["Computer Vision (Possible Fall Signals)"]
+    end
 
-    Tourist->>API: POST /api/v1/incidents/sos (idempotency_key, coordinates)
-    API->>DB: Check idempotency & create Incident (status=DETECTED)
-    API->>DB: Append IncidentEvent (INCIDENT_CREATED)
-    API->>WS: Broadcast INCIDENT_CREATED
-    WS-->>Authority: Display incoming distress beacon
+    subgraph SignalEvaluators ["Signal Evaluators (RiskConfig Policy)"]
+        DevEval["Route Deviation Evaluator (0.35 weight)"]
+        ZoneEval["Geozone Risk Evaluator (0.45 weight)"]
+        InactEval["Inactivity Evaluator (0.25 weight)"]
+        SpeedEval["Speed Dynamics Evaluator (0.15 weight)"]
+        CVEval["CV Fall Signal Evaluator (0.30 weight)"]
+    end
 
-    Authority->>API: POST /api/v1/incidents/{id}/transition (to_status=VERIFYING)
-    API->>DB: Validate state transition & append event
-    API->>WS: Broadcast INCIDENT_STATUS_CHANGED
+    subgraph DecisionEngine ["Deterministic Aggregator"]
+        Weighting["Weighted Contribution Normalizer"]
+        Thresholds["Threshold Classifier (SAFE / LOW / MED / HIGH / CRITICAL)"]
+        Explainer["Natural Language Explanation Generator"]
+    end
 
-    Authority->>API: POST /api/v1/incidents/{id}/transition (to_status=VERIFIED)
-    API->>DB: Validate state transition & append event
-    API->>WS: Broadcast INCIDENT_STATUS_CHANGED
-
-    Authority->>API: POST /api/v1/incidents/{id}/assign (responder_id)
-    API->>DB: Persist IncidentAssignment & advance to ASSIGNED
-    API->>DB: In-App Notification -> Responder
-    API->>WS: Broadcast INCIDENT_ASSIGNED
-
-    Responder->>API: POST /api/v1/incidents/{id}/transition (to_status=RESPONDING)
-    API->>DB: Validate state transition & append event
-    API->>WS: Broadcast INCIDENT_STATUS_CHANGED
-
-    Responder->>API: POST /api/v1/incidents/{id}/transition (to_status=RESOLVED, notes)
-    API->>DB: Validate state transition & append event
-    API->>WS: Broadcast INCIDENT_STATUS_CHANGED
-
-    Authority->>API: POST /api/v1/incidents/{id}/transition (to_status=CLOSED)
-    API->>DB: Move to terminal state & append event
-    API->>WS: Broadcast INCIDENT_STATUS_CHANGED
+    Inputs --> SignalEvaluators
+    SignalEvaluators --> Weighting --> Thresholds --> Explainer
 ```
 
 ---
 
-## 4. v0.7 Advanced Audit & Cryptographic Trust Pipeline
+## 4. Emergency Response & Incident Lifecycle State Machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> DETECTED: SOS Triggered / Beacon Received
+    DETECTED --> VERIFYING: Authority Begins Triage
+    DETECTED --> DISMISSED: Authority Marks False Alarm
+    VERIFYING --> VERIFIED: Distress Confirmed
+    VERIFYING --> DISMISSED: De-escalated / False Alarm
+    VERIFIED --> ESCALATED: Threat Level Elevated
+    VERIFIED --> ASSIGNED: Field Responder Dispatched
+    ESCALATED --> ASSIGNED: Emergency Units Dispatched
+    ASSIGNED --> RESPONDING: Responder Acknowledges & En Route
+    RESPONDING --> RESOLVED: Tourist Safe / Incident Handled
+    RESOLVED --> CLOSED: Authority Completes After-Action Report
+    CLOSED --> [*]
+    DISMISSED --> [*]
+```
+
+---
+
+## 5. Offline-First Synchronization & Event Queue Flow
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Actor as Authenticated User (Tourist / Responder / Admin)
-    participant API as FastAPI Endpoint Layer
+    actor Tourist as Tourist Mobile App (Offline)
+    participant Queue as Persistent FIFO Event Queue
+    participant Sync as SyncManager Worker
+    participant API as Sync Endpoint (/api/v1/sync/events)
+    participant DB as PostgreSQL Database
+
+    Tourist->>Queue: Enqueue Location / SOS / Profile Event
+    Queue-->>Tourist: Stored locally in encrypted SharedPreferences
+    Note over Tourist: Banner: "Emergency saved on device. NOT sent yet"
+
+    Sync->>Sync: Connectivity Probe (/api/v1/health -> Reachable)
+    Sync->>Queue: Drain Ordered Batch (Idempotency Keys)
+    Sync->>API: POST /api/v1/sync/events (Batch)
+    API->>DB: Check idempotency_key uniqueness in sync_records
+    DB-->>API: Idempotent commit & process domain mutation
+    API-->>Sync: 200 OK (Batch Processing Result)
+    Sync->>Queue: Delete processed events from local queue
+    Note over Tourist: Banner: "Synchronized with authorities"
+```
+
+---
+
+## 6. Cryptographic Audit Chaining & Trust Verification Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Actor as User / System Operation
     participant Service as Business Domain Service
-    participant AuditSvc as AuditService & Engine
+    participant AuditSvc as AuditService
     participant Hasher as AuditHasher (SHA-256)
-    participant DB as PostgreSQL (audit_events Table)
+    participant DB as audit_events Table
     participant Verifier as AuditChainVerifier
-    participant Anchor as TrustAnchor Adapter (Modular)
 
-    Actor->>API: Sensitive Operation (Auth, SOS, Transition, Location Read, Export)
-    API->>Service: Execute Domain Logic
-    Service->>DB: Apply & Commit Business Mutation
-    
-    %% Audit Chaining Step
-    Service->>AuditSvc: log_event(event_type, actor, resource, details)
-    AuditSvc->>DB: Fetch Latest Event (get last event_hash & sequence_number)
-    DB-->>AuditSvc: previous_hash (or GENESIS_HASH if seq #1)
-    
+    Actor->>Service: Execute Sensitive Operation (Auth, SOS, Transition, Export)
+    Service->>DB: Commit Business Record
+    Service->>AuditSvc: log_event(type, actor, resource, details)
+    AuditSvc->>DB: Fetch Latest Sequence # and Event Hash
+    DB-->>AuditSvc: previous_hash (or GENESIS_HASH if #1)
     AuditSvc->>Hasher: calculate_event_hash(canonical_payload, previous_hash)
-    Hasher->>Hasher: Sort keys, format ISO UTC timestamps, compute SHA-256
+    Hasher->>Hasher: Canonical JSON (sorted keys, ISO UTC timestamps) -> SHA-256
     Hasher-->>AuditSvc: event_hash
+    AuditSvc->>DB: INSERT INTO audit_events
     
-    AuditSvc->>DB: INSERT INTO audit_events (seq, type, actor_id, details, prev_hash, event_hash)
-    DB-->>AuditSvc: Persisted
-    AuditSvc-->>Service: Event recorded
-
-    %% Verification & Trust Anchoring
-    opt On-Demand Chain Verification (Admin/Auditor)
-        Actor->>API: POST /api/v1/audit/verify
-        API->>AuditSvc: verify_chain()
-        AuditSvc->>DB: Query all AuditEvents ORDER BY sequence_number ASC
-        DB-->>AuditSvc: Event Sequence
-        AuditSvc->>Verifier: verify_chain(events)
-        Verifier->>Verifier: Check genesis, forward pointers & payload digests
-        Verifier-->>AuditSvc: ChainVerificationResult (CHAIN_VALID / CHAIN_BROKEN)
-        AuditSvc-->>API: 200 OK (Verification Report)
-    end
-
-    opt Periodic Trust Checkpointing
-        AuditSvc->>Anchor: anchor_checkpoint(sequence_number, event_hash)
-        Anchor-->>AuditSvc: Checkpoint confirmation (Idempotent digest submission)
+    opt Verification Check
+        Actor->>Verifier: POST /api/v1/audit/verify
+        Verifier->>DB: Query all events ORDER BY sequence_number ASC
+        Verifier->>Verifier: Validate genesis root, forward pointers & payload digests
+        Verifier-->>Actor: ChainVerificationResult (CHAIN_VALID / CHAIN_BROKEN at #N)
     end
 ```

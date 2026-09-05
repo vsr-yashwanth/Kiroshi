@@ -1,7 +1,7 @@
 name: kiroshi_mobile
 description: "KIROSHI Tourist Safety Client — Keypoint Intelligence for Real-time Observation, Safety & Human Interaction"
 publish_to: 'none'
-version: 0.2.0+1
+version: 1.0.0+1
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
