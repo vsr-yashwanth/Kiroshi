@@ -41,4 +41,18 @@ class TripModel {
           [],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'tourist_id': touristId,
+      'title': title,
+      'description': description,
+      'start_date': startDate.toIso8601String(),
+      'end_date': endDate.toIso8601String(),
+      'status': status,
+      'emergency_status': emergencyStatus,
+      'itineraries': itineraries.map((i) => i.toJson()).toList(),
+    };
+  }
 }

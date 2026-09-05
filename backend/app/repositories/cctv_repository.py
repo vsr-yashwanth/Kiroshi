@@ -84,13 +84,26 @@ class CCTVRepository:
 
         results: List[Tuple[Camera, float, float, float]] = []
         for cam in cams:
-            # Extract lat/lon from metadata or defaults
-            cam_lat = cam.camera_metadata.get("latitude", latitude) if cam.camera_metadata else latitude
-            cam_lon = cam.camera_metadata.get("longitude", longitude) if cam.camera_metadata else longitude
-            dist = 50.0  # default test distance within radius
+            cam_lat = latitude
+            cam_lon = longitude
+            if cam.camera_metadata and isinstance(cam.camera_metadata, dict):
+                cam_lat = float(cam.camera_metadata.get("latitude", latitude))
+                cam_lon = float(cam.camera_metadata.get("longitude", longitude))
+
+            # Haversine distance estimation
+            import math
+            R = 6371000.0  # Earth radius in meters
+            dlat = math.radians(cam_lat - latitude)
+            dlon = math.radians(cam_lon - longitude)
+            a = math.sin(dlat / 2.0) ** 2 + math.cos(math.radians(latitude)) * math.cos(math.radians(cam_lat)) * math.sin(dlon / 2.0) ** 2
+            c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
+            dist = R * c
+
+            # If within radius or zero diff (same location), include it
             if dist <= radius_meters:
                 results.append((cam, cam_lat, cam_lon, dist))
 
+        results.sort(key=lambda x: x[3])
         return results
 
     def create_investigation(

@@ -85,7 +85,12 @@ class OfflineCacheService {
     }
     try {
       final List<dynamic> list = jsonDecode(raw) as List<dynamic>;
-      return list.map((item) => Map<String, String>.from(item as Map)).toList();
+      return list.map((item) {
+        if (item is Map) {
+          return item.map((k, v) => MapEntry(k.toString(), v.toString()));
+        }
+        return <String, String>{};
+      }).toList();
     } catch (_) {
       return [];
     }
