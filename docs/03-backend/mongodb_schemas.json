@@ -1,0 +1,937 @@
+{
+  "users": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "id",
+        "email",
+        "hashed_password",
+        "full_name",
+        "role",
+        "is_active",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "bsonType": "string",
+          "description": "UUID string"
+        },
+        "email": {
+          "bsonType": "string",
+          "pattern": "^.+@.+$"
+        },
+        "hashed_password": {
+          "bsonType": "string"
+        },
+        "full_name": {
+          "bsonType": "string"
+        },
+        "phone_number": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "role": {
+          "enum": [
+            "TOURIST",
+            "AUTHORITY",
+            "RESPONDER",
+            "ADMIN"
+          ]
+        },
+        "is_active": {
+          "bsonType": "bool"
+        },
+        "created_at": {
+          "bsonType": "date"
+        },
+        "updated_at": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "tourist_profiles": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "id",
+        "user_id",
+        "nationality",
+        "passport_hash"
+      ],
+      "properties": {
+        "id": {
+          "bsonType": "string"
+        },
+        "user_id": {
+          "bsonType": "string"
+        },
+        "nationality": {
+          "bsonType": "string"
+        },
+        "passport_hash": {
+          "bsonType": "string"
+        },
+        "emergency_contact_name": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "emergency_contact_phone": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "medical_notes": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "blood_type": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "created_at": {
+          "bsonType": "date"
+        },
+        "updated_at": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "trips": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "id",
+        "tourist_id",
+        "title",
+        "start_date",
+        "end_date",
+        "status",
+        "emergency_status"
+      ],
+      "properties": {
+        "id": {
+          "bsonType": "string"
+        },
+        "tourist_id": {
+          "bsonType": "string"
+        },
+        "title": {
+          "bsonType": "string"
+        },
+        "description": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "start_date": {
+          "bsonType": "date"
+        },
+        "end_date": {
+          "bsonType": "date"
+        },
+        "status": {
+          "enum": [
+            "PLANNED",
+            "ACTIVE",
+            "COMPLETED",
+            "CANCELLED"
+          ]
+        },
+        "emergency_status": {
+          "enum": [
+            "NORMAL",
+            "AT_RISK",
+            "SOS"
+          ]
+        },
+        "created_at": {
+          "bsonType": "date"
+        },
+        "updated_at": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "itineraries": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "id",
+        "trip_id",
+        "destination_name",
+        "latitude",
+        "longitude",
+        "sequence_order"
+      ],
+      "properties": {
+        "id": {
+          "bsonType": "string"
+        },
+        "trip_id": {
+          "bsonType": "string"
+        },
+        "destination_name": {
+          "bsonType": "string"
+        },
+        "planned_arrival": {
+          "bsonType": [
+            "date",
+            "null"
+          ]
+        },
+        "planned_departure": {
+          "bsonType": [
+            "date",
+            "null"
+          ]
+        },
+        "latitude": {
+          "bsonType": [
+            "double",
+            "int"
+          ]
+        },
+        "longitude": {
+          "bsonType": [
+            "double",
+            "int"
+          ]
+        },
+        "sequence_order": {
+          "bsonType": "int"
+        },
+        "created_at": {
+          "bsonType": "date"
+        },
+        "updated_at": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "geo_zones": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "id",
+        "name",
+        "zone_type",
+        "is_active",
+        "geometry"
+      ],
+      "properties": {
+        "id": {
+          "bsonType": "string"
+        },
+        "name": {
+          "bsonType": "string"
+        },
+        "zone_type": {
+          "enum": [
+            "SAFE",
+            "RESTRICTED",
+            "HIGH_RISK",
+            "CUSTOM"
+          ]
+        },
+        "description": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "risk_multiplier": {
+          "bsonType": [
+            "double",
+            "int"
+          ]
+        },
+        "is_active": {
+          "bsonType": "bool"
+        },
+        "geometry": {
+          "bsonType": "object",
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "Polygon",
+                "MultiPolygon"
+              ]
+            },
+            "coordinates": {
+              "bsonType": "array"
+            }
+          }
+        },
+        "created_at": {
+          "bsonType": "date"
+        },
+        "updated_at": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "location_events": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "id",
+        "tourist_id",
+        "trip_id",
+        "latitude",
+        "longitude",
+        "accuracy",
+        "location",
+        "recorded_at",
+        "received_at"
+      ],
+      "properties": {
+        "id": {
+          "bsonType": "string"
+        },
+        "tourist_id": {
+          "bsonType": "string"
+        },
+        "trip_id": {
+          "bsonType": "string"
+        },
+        "latitude": {
+          "bsonType": [
+            "double",
+            "int"
+          ]
+        },
+        "longitude": {
+          "bsonType": [
+            "double",
+            "int"
+          ]
+        },
+        "accuracy": {
+          "bsonType": [
+            "double",
+            "int"
+          ]
+        },
+        "altitude": {
+          "bsonType": [
+            "double",
+            "int",
+            "null"
+          ]
+        },
+        "speed": {
+          "bsonType": [
+            "double",
+            "int",
+            "null"
+          ]
+        },
+        "heading": {
+          "bsonType": [
+            "double",
+            "int",
+            "null"
+          ]
+        },
+        "location": {
+          "bsonType": "object",
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "Point"
+              ]
+            },
+            "coordinates": {
+              "bsonType": "array"
+            }
+          }
+        },
+        "recorded_at": {
+          "bsonType": "date"
+        },
+        "received_at": {
+          "bsonType": "date"
+        },
+        "created_at": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "zone_events": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "id",
+        "tourist_id",
+        "trip_id",
+        "zone_id",
+        "event_type",
+        "occurred_at"
+      ],
+      "properties": {
+        "id": {
+          "bsonType": "string"
+        },
+        "tourist_id": {
+          "bsonType": "string"
+        },
+        "trip_id": {
+          "bsonType": "string"
+        },
+        "zone_id": {
+          "bsonType": "string"
+        },
+        "event_type": {
+          "enum": [
+            "ENTER",
+            "EXIT"
+          ]
+        },
+        "occurred_at": {
+          "bsonType": "date"
+        },
+        "location_event_id": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "created_at": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "tourist_zone_states": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "id",
+        "tourist_id",
+        "zone_id",
+        "is_inside"
+      ],
+      "properties": {
+        "id": {
+          "bsonType": "string"
+        },
+        "tourist_id": {
+          "bsonType": "string"
+        },
+        "zone_id": {
+          "bsonType": "string"
+        },
+        "is_inside": {
+          "bsonType": "bool"
+        },
+        "entered_at": {
+          "bsonType": [
+            "date",
+            "null"
+          ]
+        },
+        "exited_at": {
+          "bsonType": [
+            "date",
+            "null"
+          ]
+        },
+        "created_at": {
+          "bsonType": "date"
+        },
+        "updated_at": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "risk_assessments": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "id",
+        "tourist_id",
+        "trip_id",
+        "risk_score",
+        "risk_level",
+        "confidence",
+        "evaluated_at"
+      ],
+      "properties": {
+        "id": {
+          "bsonType": "string"
+        },
+        "tourist_id": {
+          "bsonType": "string"
+        },
+        "trip_id": {
+          "bsonType": "string"
+        },
+        "location_event_id": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "risk_score": {
+          "bsonType": [
+            "double",
+            "int"
+          ]
+        },
+        "risk_level": {
+          "enum": [
+            "SAFE",
+            "LOW",
+            "MEDIUM",
+            "HIGH",
+            "CRITICAL"
+          ]
+        },
+        "confidence": {
+          "bsonType": [
+            "double",
+            "int"
+          ]
+        },
+        "signals": {
+          "bsonType": "array"
+        },
+        "explanation": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "recommended_action": {
+          "enum": [
+            "MONITOR",
+            "REVIEW",
+            "CONTACT_TOURIST",
+            "ESCALATE_FOR_HUMAN_REVIEW"
+          ]
+        },
+        "evaluated_at": {
+          "bsonType": "date"
+        },
+        "created_at": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "incidents": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "id",
+        "source",
+        "severity",
+        "status",
+        "tourist_id",
+        "location_freshness",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "bsonType": "string"
+        },
+        "source": {
+          "enum": [
+            "SOS",
+            "RISK_ENGINE",
+            "AUTHORITY",
+            "SYSTEM"
+          ]
+        },
+        "severity": {
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH",
+            "CRITICAL"
+          ]
+        },
+        "status": {
+          "enum": [
+            "DETECTED",
+            "VERIFYING",
+            "VERIFIED",
+            "ESCALATED",
+            "ASSIGNED",
+            "RESPONDING",
+            "RESOLVED",
+            "CLOSED",
+            "DISMISSED"
+          ]
+        },
+        "tourist_id": {
+          "bsonType": "string"
+        },
+        "trip_id": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "latitude": {
+          "bsonType": [
+            "double",
+            "int",
+            "null"
+          ]
+        },
+        "longitude": {
+          "bsonType": [
+            "double",
+            "int",
+            "null"
+          ]
+        },
+        "accuracy": {
+          "bsonType": [
+            "double",
+            "int",
+            "null"
+          ]
+        },
+        "location_freshness": {
+          "enum": [
+            "LIVE",
+            "RECENT",
+            "STALE",
+            "UNKNOWN"
+          ]
+        },
+        "description": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "risk_assessment_id": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "assigned_responder_id": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "idempotency_key": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "resolution_notes": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "resolved_at": {
+          "bsonType": [
+            "date",
+            "null"
+          ]
+        },
+        "closed_at": {
+          "bsonType": [
+            "date",
+            "null"
+          ]
+        },
+        "created_at": {
+          "bsonType": "date"
+        },
+        "updated_at": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "incident_events": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "id",
+        "incident_id",
+        "event_type",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "bsonType": "string"
+        },
+        "incident_id": {
+          "bsonType": "string"
+        },
+        "actor_id": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "actor_role": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "event_type": {
+          "bsonType": "string"
+        },
+        "from_status": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "to_status": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "reason": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "details": {
+          "bsonType": [
+            "object",
+            "null"
+          ]
+        },
+        "created_at": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "incident_assignments": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "id",
+        "incident_id",
+        "responder_id",
+        "status",
+        "assigned_at"
+      ],
+      "properties": {
+        "id": {
+          "bsonType": "string"
+        },
+        "incident_id": {
+          "bsonType": "string"
+        },
+        "responder_id": {
+          "bsonType": "string"
+        },
+        "assigned_by_id": {
+          "bsonType": "string"
+        },
+        "status": {
+          "enum": [
+            "ACTIVE",
+            "COMPLETED",
+            "REASSIGNED",
+            "CANCELLED"
+          ]
+        },
+        "notes": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "assigned_at": {
+          "bsonType": "date"
+        },
+        "completed_at": {
+          "bsonType": [
+            "date",
+            "null"
+          ]
+        },
+        "created_at": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "notifications": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "id",
+        "recipient_id",
+        "title",
+        "message",
+        "channel",
+        "delivery_status",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "bsonType": "string"
+        },
+        "recipient_id": {
+          "bsonType": "string"
+        },
+        "incident_id": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "bsonType": "string"
+        },
+        "message": {
+          "bsonType": "string"
+        },
+        "channel": {
+          "enum": [
+            "IN_APP",
+            "PUSH",
+            "SMS",
+            "EMAIL"
+          ]
+        },
+        "delivery_status": {
+          "enum": [
+            "PENDING",
+            "SENT",
+            "FAILED",
+            "RETRYING"
+          ]
+        },
+        "idempotency_key": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "retry_count": {
+          "bsonType": "int"
+        },
+        "sent_at": {
+          "bsonType": [
+            "date",
+            "null"
+          ]
+        },
+        "read_at": {
+          "bsonType": [
+            "date",
+            "null"
+          ]
+        },
+        "error_details": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "created_at": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "sync_records": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "id",
+        "user_id",
+        "idempotency_key",
+        "event_type",
+        "resource_type",
+        "status",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "bsonType": "string"
+        },
+        "user_id": {
+          "bsonType": "string"
+        },
+        "idempotency_key": {
+          "bsonType": "string"
+        },
+        "event_type": {
+          "enum": [
+            "SOS_EVENT",
+            "LOCATION_EVENT",
+            "TRIP_UPDATE",
+            "INCIDENT_ACTION"
+          ]
+        },
+        "resource_type": {
+          "bsonType": "string"
+        },
+        "resource_id": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "SYNCED",
+            "DUPLICATE",
+            "REJECTED",
+            "CONFLICT",
+            "ERROR"
+          ]
+        },
+        "response_payload": {
+          "bsonType": [
+            "object",
+            "null"
+          ]
+        },
+        "created_at": {
+          "bsonType": "date"
+        },
+        "updated_at": {
+          "bsonType": "date"
+        }
+      }
+    }
+  }
+}
