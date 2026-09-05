@@ -7,7 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.0] — 2026-09-05
+
+### Added
+- **Offline-First Synchronization Engine (`backend/app/services/sync_service.py`)**: Centralized synchronization service processing ordered batches of offline events (`POST /api/v1/sync/events`) with partial batch failure isolation.
+- **Server-Side Idempotency (`SyncRecord`)**: Dedicated `sync_records` database table and Alembic migration `b52e7189c101` with unique `idempotency_key` constraint preventing duplicate incidents, duplicate state transitions, and side effects across network retries.
+- **Persistent Mobile Event Queue (`OfflineEventQueue`)**: Thread-safe FIFO storage queue backed by `SharedPreferences` that survives mobile application kills, crashes, and device reboots.
+- **Critical Honesty Rule for Offline SOS**: Absolute requirement ensuring the mobile UI never claims "Emergency sent" when offline. Displays explicit "Emergency saved on device. It has NOT reached authorities yet" until authoritative server acknowledgement is received.
+- **Active Backend Connectivity Awareness (`ConnectivityService`)**: Active health probing of backend reachability (`/api/v1/health`) rather than relying on superficial local Wi-Fi interface flags.
+- **Offline State Machine (`SyncManager`)**: Unambiguous 5-state transitions (`ONLINE`, `OFFLINE`, `SYNCING`, `SYNCED`, `SYNC_ERROR`) with single-worker mutex locking and bounded exponential backoff ($2\text{s} \rightarrow 30\text{s}$).
+- **Offline Trip Caching (`OfflineCacheService`)**: Local caching of active trip, itineraries, emergency contacts, and single last-known GPS fix with graceful offline degradation in `TripState`.
+- **Global Connectivity & Honest SOS Banner (`ConnectivityBanner`)**: Real-time persistent visual indicator communicating current synchronization state and explicit offline SOS alerts across all application screens.
+- **Comprehensive Test Coverage**: Added `test_sync_api.py` and `test_e2e_v05_offline_sync_workflow.py` validating single/batch sync, duplicate suppression, late-arriving timestamps, trip conflict resolution, and end-to-end offline lifecycle (84/84 passing).
+- **Architecture Documentation & Decisions**: Added `docs/04-mobile/OFFLINE_MODE.md` and `docs/08-decisions/ADR-005-offline-sync.md`.
+
+### Security
+- Bounded local queue storage (1,000 items) preventing runaway disk growth while strictly preserving all life-critical SOS beacons.
+- Storage data minimization: zero caching of user passwords, raw auth tokens stored exclusively in secure platform storage (`flutter_secure_storage`), and suppression of excessive historic breadcrumbs.
+- Server-authoritative conflict resolution enforcing RBAC and rejecting unauthorized state transitions from stale offline events.
+
+---
+
 ## [0.4.0] — 2026-09-04
+
 
 ### Added
 - **Incident Domain (`backend/app/domain/models/incident*.py`)**: Dedicated, independent domain models for `Incident`, `IncidentEvent`, and `IncidentAssignment` with Alembic migration `a41d9230e71b`.

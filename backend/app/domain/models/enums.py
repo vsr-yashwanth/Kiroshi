@@ -124,4 +124,20 @@ class NotificationDeliveryStatus(str, enum.Enum):
     RETRYING = "RETRYING"
 
 
+class SyncEventType(str, enum.Enum):
+    SOS_EVENT = "SOS_EVENT"
+    LOCATION_EVENT = "LOCATION_EVENT"
+    TRIP_UPDATE = "TRIP_UPDATE"
+    INCIDENT_ACTION = "INCIDENT_ACTION"
+
+
+class SyncEventStatus(str, enum.Enum):
+    SYNCED = "SYNCED"
+    DUPLICATE = "DUPLICATE"
+    REJECTED = "REJECTED"
+    CONFLICT = "CONFLICT"
+    ERROR = "ERROR"
+
+
+
 

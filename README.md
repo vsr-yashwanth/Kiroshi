@@ -1,7 +1,7 @@
 # KIROSHI — Smart Tourist Safety Monitoring & Incident Response System
 
 [![CI](https://github.com/vsr-yashwanth/KIROSHI/actions/workflows/ci.yml/badge.svg)](https://github.com/vsr-yashwanth/KIROSHI/actions)
-[![Milestone](https://img.shields.io/badge/Milestone-v0.4.0--Emergency--Response-success.svg)](https://github.com/vsr-yashwanth/KIROSHI)
+[![Milestone](https://img.shields.io/badge/Milestone-v0.5.0--Offline--First--Safety-success.svg)](https://github.com/vsr-yashwanth/KIROSHI)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PostGIS](https://img.shields.io/badge/PostGIS-3.4%2B-336791.svg)](https://postgis.net/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg)](https://fastapi.tiangolo.com/)
@@ -13,20 +13,20 @@
 
 ---
 
-## Current Status: Milestone v0.4.0 — Emergency Response & Incident Management
+## Current Status: Milestone v0.5.0 — Offline-First Safety
 
-Milestone v0.4 introduces an enterprise incident management domain, a life-critical emergency SOS beacon, a strict 9-state server-side transition state machine, and real-time authority dispatch operations:
+Milestone v0.5 makes tourist safety functionality completely resilient to unavailable or intermittent network connectivity:
 
-- **Independent Incident Domain (`backend/app/domain/models/incident*.py`)**: Independent lifecycle entities (`Incident`, `IncidentEvent`, `IncidentAssignment`) decoupled from analytical risk scoring.
-- **Server-Enforced 9-State State Machine (`IncidentStateMachine`)**: Rigidly enforces transition matrix across `DETECTED`, `VERIFYING`, `VERIFIED`, `ESCALATED`, `ASSIGNED`, `RESPONDING`, `RESOLVED`, `CLOSED`, and `DISMISSED`. Terminal states are immutable.
-- **Role-Aware Transition Security**: Strict RBAC prevents unauthorized mutations (tourists cannot resolve, responders cannot close, responders can only update assigned incidents).
-- **Life-Critical Emergency SOS Beacon**: 100% decoupled from AI, ML, CCTV, and external gateways. Automatically captures GPS with `LIVE` / `RECENT` / `STALE` freshness, gracefully falling back to `UNKNOWN` if GPS is disabled without blocking incident creation.
-- **SOS Idempotency Protection**: Client-generated idempotency keys suppress double-taps and network retransmissions.
-- **Append-Only Timeline Audit Trail**: Every status change, assignment, and escalation generates an immutable `IncidentEvent` record with actor, role, timestamps, and rationale.
-- **Pluggable Notification Abstraction**: In-app provider with delivery retry and guaranteed failure isolation (notification errors never roll back incident creation).
-- **Real-Time WebSocket Incident Pipeline**: Extends `/api/v1/ws/authority` with `INCIDENT_CREATED`, `INCIDENT_STATUS_CHANGED`, and `INCIDENT_ASSIGNED` broadcasts.
-- **Authority Incident Operations Console**: React 19 dashboard featuring real-time queue counters, severity indicators, status filters, responder assignment, and chronological timeline view.
-- **Comprehensive Automated Test Suite**: 79 automated tests passing cleanly across state machine transitions, invalid terminal rejection, SOS failure modes, notifications, API access control, and complete end-to-end emergency lifecycle (79/79 passing).
+- **Offline-First Synchronization Engine (`POST /api/v1/sync/events`)**: Robust batch synchronization endpoint with partial failure isolation and chronological event ordering.
+- **Server-Side Idempotency Guarantee (`sync_records`)**: Dedicated persistence table with unique `idempotency_key` constraint preventing duplicate incidents, transitions, or side-effects across retries.
+- **Persistent Mobile Event Queue (`OfflineEventQueue`)**: Thread-safe FIFO storage queue backed by `SharedPreferences` that survives application kills, crashes, and device reboots.
+- **Critical Honesty Rule for Offline SOS**: Absolute honesty in mobile distress reporting: UI explicitly displays *"Emergency saved on this device. It has NOT reached authorities yet"* until server acknowledgement is authoritatively received.
+- **Centralized 5-State Machine (`SyncManager`)**: Unambiguous state transitions (`ONLINE`, `OFFLINE`, `SYNCING`, `SYNCED`, `SYNC_ERROR`) with single-worker mutex locking and bounded exponential backoff ($2\text{s} \rightarrow 30\text{s}$).
+- **Active Backend Connectivity Awareness (`ConnectivityService`)**: Probes genuine backend reachability (`/api/v1/health`) rather than relying on superficial Wi-Fi interface status.
+- **Offline Trip Experience (`OfflineCacheService`)**: Local caching of active trip, itineraries, emergency contacts, and single last-known location with graceful degradation in `TripState`.
+- **Global Visual Indicator (`ConnectivityBanner`)**: Persistent visual banner communicating current synchronization state and explicit offline SOS alerts across the application.
+- **Comprehensive Automated Test Suite**: 84 tests passing cleanly across unit, API, idempotency, conflict handling, and complete end-to-end offline lifecycle scenarios (84/84 passing).
+
 
 ---
 

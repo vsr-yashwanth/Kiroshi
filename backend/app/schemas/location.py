@@ -14,6 +14,8 @@ class LocationIngestRequest(BaseModel):
     speed: Optional[float] = Field(None, ge=0.0, description="Instantaneous ground speed in meters per second")
     heading: Optional[float] = Field(None, ge=0.0, lt=360.0, description="Direction of travel in degrees clockwise from true north")
     recorded_at: datetime = Field(..., description="Timestamp recorded by client hardware GPS clock")
+    idempotency_key: Optional[str] = Field(None, max_length=128, description="Client idempotency key for deduplication")
+
 
 
 class LocationEventResponse(BaseModel):

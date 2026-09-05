@@ -4,8 +4,10 @@ import 'core/constants/app_colors.dart';
 import 'application/auth_state.dart';
 import 'application/trip_state.dart';
 import 'application/location_state.dart';
+import 'application/offline_sync_state.dart';
 import 'presentation/screens/login_screen.dart';
 import 'presentation/screens/trip_list_screen.dart';
+import 'presentation/widgets/connectivity_banner.dart';
 
 import 'core/constants/endpoints.dart';
 
@@ -25,12 +27,23 @@ class KiroshiApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthState()..initAuth()),
         ChangeNotifierProvider(create: (_) => TripState()),
         ChangeNotifierProvider(create: (_) => LocationState()..initializePermissions()),
+        ChangeNotifierProvider(create: (_) => OfflineSyncState()),
       ],
       child: Consumer<AuthState>(
         builder: (context, authState, _) {
           return MaterialApp(
             title: 'KIROSHI',
             debugShowCheckedModeBanner: false,
+            builder: (context, child) {
+              return Scaffold(
+                body: Column(
+                  children: [
+                    const ConnectivityBanner(),
+                    Expanded(child: child ?? const SizedBox.shrink()),
+                  ],
+                ),
+              );
+            },
             theme: ThemeData.dark().copyWith(
               scaffoldBackgroundColor: AppColors.background,
               primaryColor: AppColors.primary,
@@ -50,3 +63,4 @@ class KiroshiApp extends StatelessWidget {
     );
   }
 }
+

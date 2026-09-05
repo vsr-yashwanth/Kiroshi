@@ -16,6 +16,8 @@ from backend.app.domain.models.enums import (
     AssignmentStatus,
     NotificationChannel,
     NotificationDeliveryStatus,
+    SyncEventType,
+    SyncEventStatus,
 )
 from backend.app.domain.models.base import TimestampMixin, UUIDModel
 from backend.app.domain.models.user import User
@@ -30,6 +32,7 @@ from backend.app.domain.models.incident import Incident
 from backend.app.domain.models.incident_event import IncidentEvent
 from backend.app.domain.models.incident_assignment import IncidentAssignment
 from backend.app.domain.models.notification import Notification
+from backend.app.domain.models.sync_record import SyncRecord
 
 __all__ = [
     "Base",
@@ -49,6 +52,8 @@ __all__ = [
     "AssignmentStatus",
     "NotificationChannel",
     "NotificationDeliveryStatus",
+    "SyncEventType",
+    "SyncEventStatus",
     "TimestampMixin",
     "UUIDModel",
     "User",
@@ -64,4 +69,6 @@ __all__ = [
     "IncidentEvent",
     "IncidentAssignment",
     "Notification",
+    "SyncRecord",
 ]
+

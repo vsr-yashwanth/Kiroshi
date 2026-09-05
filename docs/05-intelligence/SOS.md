@@ -97,3 +97,21 @@ Under stressful emergency situations or poor cellular connectivity, tourists may
    The server checks the `incidents.idempotency_key` unique constraint:
    - If an incident with the given key already exists in the database, the existing incident record is returned immediately with HTTP 200.
    - No duplicate incident row or redundant notification cascade is generated.
+
+---
+
+## 5. Offline SOS & The Critical Honesty Rule (v0.5)
+
+In environments completely lacking cellular or Wi-Fi signal, KIROSHI introduces offline distress handling governed by the **Critical Honesty Rule**:
+
+> **A safety system must never falsely reassure a user that emergency services have been alerted when the message has not left the device.**
+
+### Offline Flow:
+1. **Local Capture**: Hardware GPS coordinates (or fallback `UNKNOWN`), active trip ID, and distress notes are assembled into a local `SOS_EVENT`.
+2. **Persistent Queueing**: The event is persisted to the local device storage (`OfflineEventQueue`). It survives application kills, operating system reboots, and crashes.
+3. **Unmistakable Feedback**:
+   - Status: `EMERGENCY SAVED ON DEVICE`.
+   - Message: *"Emergency saved on this device. It has NOT reached authorities yet. We will retry when connectivity returns."*
+4. **Automated Synchronization**: As soon as backend reachability is re-established, the single-worker `SyncManager` transmits the queued SOS to `POST /api/v1/sync/events`.
+5. **Server Confirmation**: Only after receiving the server's HTTP 200 response with authoritative incident ID does the UI transition to `EMERGENCY BEACON ACTIVE`.
+

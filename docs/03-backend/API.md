@@ -1,6 +1,7 @@
-# API Specification — KIROSHI v0.3
+# API Specification — KIROSHI v0.5
 
-> Status: IMPLEMENTED (v0.3) | Base Path: `/api/v1`
+> Status: IMPLEMENTED (v0.5) | Base Path: `/api/v1`
+
 
 ---
 
@@ -478,5 +479,80 @@ Lists notifications for the authenticated user with unread prioritizing.
 ### `PUT /api/v1/notifications/{notification_id}/read`
 Marks a notification as read.
 - **Access**: Recipient of the notification.
+
+---
+
+## 8. Offline Synchronization Endpoints (v0.5)
+
+### `POST /api/v1/sync/events`
+Synchronizes an ordered batch of offline-generated safety events with strict server-side idempotency, partial failure isolation, and deterministic conflict resolution.
+
+- **Access**: Authenticated (`TOURIST`, `AUTHORITY`, `RESPONDER`, `ADMIN`).
+- **Request Body**:
+  ```json
+  {
+    "events": [
+      {
+        "local_event_id": "loc-1725529200-1234",
+        "event_type": "LOCATION_EVENT",
+        "timestamp": "2026-09-05T09:40:00Z",
+        "payload": {
+          "trip_id": "b3e94a82-...",
+          "latitude": 35.3606,
+          "longitude": 138.7274,
+          "accuracy": 8.0,
+          "altitude": 2800.0,
+          "speed": 1.2,
+          "heading": 45.0,
+          "recorded_at": "2026-09-05T09:40:00Z"
+        },
+        "retry_count": 0
+      },
+      {
+        "local_event_id": "sos-1725529800-5678",
+        "event_type": "SOS_EVENT",
+        "timestamp": "2026-09-05T09:50:00Z",
+        "payload": {
+          "trip_id": "b3e94a82-...",
+          "latitude": 35.3625,
+          "longitude": 138.7300,
+          "accuracy": 5.0,
+          "notes": "Severe hypothermia and disorientation"
+        },
+        "retry_count": 0
+      }
+    ]
+  }
+  ```
+- **Responses**:
+  - `200 OK`:
+    ```json
+    {
+      "results": [
+        {
+          "local_event_id": "loc-1725529200-1234",
+          "status": "SYNCED",
+          "server_id": "d4a7f281-...",
+          "message": "Location breadcrumb successfully ingested and evaluated.",
+          "server_timestamp": "2026-09-05T10:05:00Z",
+          "conflict_details": null
+        },
+        {
+          "local_event_id": "sos-1725529800-5678",
+          "status": "SYNCED",
+          "server_id": "e8c3b190-...",
+          "message": "Emergency SOS successfully synchronized and authoritative incident created.",
+          "server_timestamp": "2026-09-05T10:05:00Z",
+          "conflict_details": null
+        }
+      ],
+      "synced_count": 2,
+      "duplicate_count": 0,
+      "failed_count": 0
+    }
+    ```
+  - `401 Unauthorized`: Missing or expired authentication token.
+  - `422 Unprocessable Entity`: Malformed JSON or validation error.
+
 
 

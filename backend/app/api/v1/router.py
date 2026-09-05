@@ -10,6 +10,7 @@ from backend.app.api.v1.endpoints import (
     risk,
     incidents,
     notifications,
+    sync,
 )
 
 api_router = APIRouter()
@@ -24,3 +25,5 @@ api_router.include_router(websocket.router, prefix="/ws", tags=["WebSockets"])
 api_router.include_router(risk.router, prefix="/risk", tags=["Risk Engine"])
 api_router.include_router(incidents.router, prefix="/incidents", tags=["Emergency Response / Incidents"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
+api_router.include_router(sync.router, prefix="/sync", tags=["Offline Synchronization"])
+

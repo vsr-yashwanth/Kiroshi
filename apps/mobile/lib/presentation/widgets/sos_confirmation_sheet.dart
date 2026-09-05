@@ -25,6 +25,8 @@ class _SosConfirmationSheetState extends State<SosConfirmationSheet> {
 
   bool _isTransmitting = false;
   String? _incidentId;
+  bool _isOfflineSaved = false;
+  String? _honestStatusMessage;
   String? _errorMessage;
   String? _idempotencyKey;
 
@@ -47,7 +49,7 @@ class _SosConfirmationSheetState extends State<SosConfirmationSheet> {
     });
 
     try {
-      final incident = await _sosService.triggerSos(
+      final result = await _sosService.triggerSos(
         tripId: widget.activeTripId,
         notes: _notesController.text.trim(),
         idempotencyKey: _idempotencyKey,
@@ -55,7 +57,15 @@ class _SosConfirmationSheetState extends State<SosConfirmationSheet> {
 
       setState(() {
         _isTransmitting = false;
-        _incidentId = incident['id']?.toString() ?? 'CONFIRMED';
+        if (result.isConfirmedByAuthorities) {
+          _incidentId = result.incidentId ?? 'CONFIRMED';
+          _isOfflineSaved = false;
+          _honestStatusMessage = result.honestMessage;
+        } else {
+          _incidentId = null;
+          _isOfflineSaved = true;
+          _honestStatusMessage = result.honestMessage;
+        }
       });
     } catch (e) {
       setState(() {
@@ -64,6 +74,7 @@ class _SosConfirmationSheetState extends State<SosConfirmationSheet> {
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -149,7 +160,61 @@ class _SosConfirmationSheetState extends State<SosConfirmationSheet> {
                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
+            ] else if (_isOfflineSaved) ...[
+              // Offline Saved State (Critical Honesty Rule)
+              const Icon(
+                Icons.cloud_off_rounded,
+                color: Color(0xFFF59E0B),
+                size: 64,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'EMERGENCY SAVED ON DEVICE',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFFFCD34D),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF78350F).withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFB45309)),
+                ),
+                child: Text(
+                  _honestStatusMessage ??
+                      'Emergency saved on this device. It has NOT reached authorities yet. We will retry when connectivity returns.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    height: 1.4,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFB45309),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text(
+                  'UNDERSTOOD (CLOSE)',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
             ] else ...[
+
               // Confirmation Dialog
               Row(
                 children: [

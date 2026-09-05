@@ -1,13 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:location/location.dart';
+import '../../domain/models/offline_event.dart';
 import '../storage/token_storage.dart';
+import '../storage/offline_event_queue.dart';
+import '../storage/offline_cache_service.dart';
 import '../constants/endpoints.dart';
 import '../../domain/models/location_tracking_state.dart';
 
 class LocationTrackingService {
   final TokenStorage _tokenStorage;
+  final OfflineEventQueue _queue;
+  final OfflineCacheService _cache;
   final http.Client _httpClient;
   final Location _location = Location();
 
@@ -16,8 +22,12 @@ class LocationTrackingService {
 
   LocationTrackingService({
     TokenStorage? tokenStorage,
+    OfflineEventQueue? queue,
+    OfflineCacheService? cache,
     http.Client? httpClient,
   })  : _tokenStorage = tokenStorage ?? TokenStorage(),
+        _queue = queue ?? OfflineEventQueue(),
+        _cache = cache ?? OfflineCacheService(),
         _httpClient = httpClient ?? http.Client();
 
   Future<TrackingStatus> checkAndRequestPermissions() async {
@@ -73,11 +83,19 @@ class LocationTrackingService {
 
         onLocationCaptured(point);
 
-        // Transmit coordinates to backend
+        // Update local single latest location cache
+        await _cache.cacheLastLocation(
+          latitude: point.latitude,
+          longitude: point.longitude,
+          accuracy: point.accuracy,
+          recordedAt: point.recordedAt,
+        );
+
+        // Transmit coordinates to backend if possible; queue locally if offline
         try {
-          await _transmitLocation(point);
+          await _transmitOrQueueLocation(point);
         } catch (e) {
-          onError('Failed to sync coordinates to server: $e');
+          onError('Location buffered for offline sync: $e');
         }
       },
       onError: (err) {
@@ -86,27 +104,56 @@ class LocationTrackingService {
     );
   }
 
-  Future<void> _transmitLocation(LocationPoint point) async {
+  Future<void> _transmitOrQueueLocation(LocationPoint point) async {
     if (_activeTripId == null) return;
 
     final token = await _tokenStorage.getToken();
+    final localKey = 'loc-${point.recordedAt.millisecondsSinceEpoch}-${Random().nextInt(100000)}';
+    final payload = point.toJson(_activeTripId!);
+    payload['idempotency_key'] = localKey;
+
     if (token == null) {
-      throw Exception('Unauthenticated: No active JWT token');
+      // Unauthenticated, buffer locally
+      await _queueLocationEvent(localKey, point, payload);
+      return;
     }
 
-    final url = Uri.parse(Endpoints.location);
-    final response = await _httpClient.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode(point.toJson(_activeTripId!)),
+    try {
+      final url = Uri.parse(Endpoints.location);
+      final response = await _httpClient
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 4));
+
+      if (response.statusCode != 201) {
+        // Server rejected or network issue -> Queue locally
+        await _queueLocationEvent(localKey, point, payload);
+      }
+    } catch (_) {
+      // Network timeout / offline -> Queue locally
+      await _queueLocationEvent(localKey, point, payload);
+    }
+  }
+
+  Future<void> _queueLocationEvent(
+    String localKey,
+    LocationPoint point,
+    Map<String, dynamic> payload,
+  ) async {
+    final offlineEvent = OfflineEvent(
+      localEventId: localKey,
+      eventType: OfflineEventType.location,
+      timestamp: point.recordedAt,
+      payload: payload,
+      status: QueueItemStatus.pending,
     );
-
-    if (response.statusCode != 201) {
-      throw Exception('Ingestion rejected with status ${response.statusCode}: ${response.body}');
-    }
+    await _queue.enqueue(offlineEvent);
   }
 
   Future<void> stopTracking() async {
