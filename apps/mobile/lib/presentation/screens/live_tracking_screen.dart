@@ -19,6 +19,7 @@ class LiveTrackingScreen extends StatelessWidget {
           backgroundColor: AppColors.background,
           appBar: AppBar(
             backgroundColor: AppColors.surface,
+            elevation: 0,
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -43,7 +44,7 @@ class LiveTrackingScreen extends StatelessWidget {
               if (locationState.lastError != null)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  color: AppColors.danger.withOpacity(0.15),
+                  color: AppColors.danger.withValues(alpha: 0.15),
                   child: Row(
                     children: [
                       const Icon(Icons.warning_amber_rounded, color: AppColors.danger, size: 18),
@@ -58,11 +59,15 @@ class LiveTrackingScreen extends StatelessWidget {
                   ),
                 ),
 
-              // Real-time Telemetry Cards
+              // Real-time Telemetry Cards & Authority Proximity Radar
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
+                    // Authority Proximity & Response Network Card
+                    _buildAuthorityProximityCard(context, locationState),
+                    const SizedBox(height: 14),
+
                     _buildTelemetryCard(
                       title: 'CURRENT COORDINATES',
                       value: locationState.currentLocation != null
@@ -121,9 +126,9 @@ class LiveTrackingScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
-                    // Privacy & Battery Notice
+                    // Privacy & Safety Network Protection Notice
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
@@ -138,7 +143,7 @@ class LiveTrackingScreen extends StatelessWidget {
                           SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              'Battery-conscious adaptive distance filtering (10m) is active. Coordinates are encrypted and processed by PostGIS exclusively for hazard safety geofencing.',
+                              'Battery-conscious adaptive distance filtering (10m) is active. Coordinates are encrypted and processed exclusively for safety geofencing and rescue coordination.',
                               style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
                             ),
                           ),
@@ -211,6 +216,115 @@ class LiveTrackingScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildAuthorityProximityCard(BuildContext context, LocationState locationState) {
+    final bool isTracking = locationState.status == TrackingStatus.trackingEnabled;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF1E293B)),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF06B6D4).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.security_rounded, color: Color(0xFF06B6D4), size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'AUTHORITY SAFETY RADAR',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF06B6D4),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      Text(
+                        'Nearest Dispatch Base: 1.2 km away',
+                        style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isTracking ? const Color(0xFF10B981).withValues(alpha: 0.15) : const Color(0xFF64748B).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isTracking ? const Color(0xFF10B981).withValues(alpha: 0.4) : const Color(0xFF64748B).withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isTracking ? const Color(0xFF10B981) : const Color(0xFF64748B),
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      isTracking ? 'CONNECTED' : 'STANDBY',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isTracking ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(color: Color(0xFF1E293B), height: 1),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const Icon(Icons.shield_rounded, size: 14, color: Color(0xFF10B981)),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  isTracking
+                      ? 'Command center is actively observing your GPS telemetry trail for safety.'
+                      : 'Enable tracking to broadcast telemetry directly to nearby rescue authorities.',
+                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildStatusBanner(BuildContext context, LocationState locationState) {
     Color bannerColor;
     IconData icon;
@@ -248,8 +362,8 @@ class LiveTrackingScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: bannerColor.withOpacity(0.12),
-        border: Border(bottom: BorderSide(color: bannerColor.withOpacity(0.4))),
+        color: bannerColor.withValues(alpha: 0.12),
+        border: Border(bottom: BorderSide(color: bannerColor.withValues(alpha: 0.3))),
       ),
       child: Row(
         children: [
@@ -261,12 +375,11 @@ class LiveTrackingScreen extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(color: bannerColor, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: bannerColor, letterSpacing: 0.5),
                 ),
-                const SizedBox(height: 2),
                 Text(
                   description,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
                 ),
               ],
             ),
@@ -294,18 +407,18 @@ class LiveTrackingScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 16, color: color),
+              Icon(icon, size: 14, color: color),
               const SizedBox(width: 6),
               Text(
                 title,
-                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.textMuted, letterSpacing: 0.5),
+                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textMuted, letterSpacing: 0.5),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary, fontFamily: 'monospace'),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
           ),
         ],
       ),

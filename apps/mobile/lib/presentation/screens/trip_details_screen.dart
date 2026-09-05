@@ -73,7 +73,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: (isActive ? AppColors.success : AppColors.primary).withOpacity(0.15),
+                          color: (isActive ? AppColors.success : AppColors.primary).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -131,7 +131,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                       children: [
                         CircleAvatar(
                           radius: 14,
-                          backgroundColor: AppColors.primaryLight.withOpacity(0.2),
+                          backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
                           child: Text(
                             '${waypoint.sequenceOrder}',
                             style: const TextStyle(color: AppColors.primaryLight, fontWeight: FontWeight.bold, fontSize: 12),

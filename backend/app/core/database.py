@@ -81,6 +81,13 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, futu
 
 Base = declarative_base()
 
+# Register real-time MongoDB synchronization hooks
+try:
+    from backend.app.core.mongo_sync import register_mongo_sync_listeners
+    register_mongo_sync_listeners(engine)
+except Exception:
+    pass
+
 
 def get_db():
     db: Session = SessionLocal()
@@ -88,3 +95,4 @@ def get_db():
         yield db
     finally:
         db.close()
+

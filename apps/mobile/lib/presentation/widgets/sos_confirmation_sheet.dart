@@ -182,7 +182,7 @@ class _SosConfirmationSheetState extends State<SosConfirmationSheet> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF78350F).withOpacity(0.4),
+                  color: const Color(0xFF78350F).withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFB45309)),
                 ),
@@ -221,7 +221,7 @@ class _SosConfirmationSheetState extends State<SosConfirmationSheet> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEF4444).withOpacity(0.15),
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: const Icon(

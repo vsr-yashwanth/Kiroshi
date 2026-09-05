@@ -173,9 +173,9 @@ export const LiveMonitoringPage: React.FC = () => {
       </div>
 
       {/* Main Grid: Live GIS Map (Left) & Telemetry Sidebar (Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="monitoring-grid">
         {/* Map Center Area */}
-        <div className="lg:col-span-2">
+        <div>
           <LiveMonitoringMap
             tourists={tourists}
             zones={zones}

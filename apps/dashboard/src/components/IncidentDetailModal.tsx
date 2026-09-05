@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Incident,
-  IncidentEvent,
-  IncidentStatus,
-} from '../types';
+import { Incident, IncidentEvent, IncidentStatus } from '../types';
 import { api } from '../services/api';
 import { LoadingSpinner } from './LoadingSpinner';
+import {
+  X,
+  Clock,
+  MapPin,
+  Camera,
+  AlertTriangle,
+  UserCheck,
+} from 'lucide-react';
 
 interface IncidentDetailModalProps {
   incident: Incident;
@@ -16,7 +20,7 @@ interface IncidentDetailModalProps {
 
 export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
   incident,
-  currentUserRole = 'AUTHORITY',
+  currentUserRole: _currentUserRole = 'AUTHORITY',
   onClose,
   onIncidentUpdated,
 }) => {
@@ -29,20 +33,6 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [cctvLoading, setCctvLoading] = useState(false);
   const [cctvResult, setCctvResult] = useState<any | null>(null);
-
-  const handleInvestigateCCTV = async () => {
-    try {
-      setCctvLoading(true);
-      setErrorMsg(null);
-      const res = await api.investigateIncidentCCTV(incident.id, 300, 5, 5);
-      setCctvResult(res);
-      await fetchTimeline();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'CCTV investigation failed.');
-    } finally {
-      setCctvLoading(false);
-    }
-  };
 
   useEffect(() => {
     fetchTimeline();
@@ -73,6 +63,20 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
     }
   };
 
+  const handleInvestigateCCTV = async () => {
+    try {
+      setCctvLoading(true);
+      setErrorMsg(null);
+      const res = await api.investigateIncidentCCTV(incident.id, 300, 5, 5);
+      setCctvResult(res);
+      await fetchTimeline();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'CCTV investigation failed.');
+    } finally {
+      setCctvLoading(false);
+    }
+  };
+
   const handleTransition = async (toStatus: IncidentStatus, promptReason = false) => {
     try {
       setIsSubmitting(true);
@@ -90,7 +94,7 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
         incident.id,
         toStatus,
         notes || undefined,
-        toStatus === 'RESOLVED' ? notes : undefined,
+        toStatus === 'RESOLVED' ? notes : undefined
       );
       setActionNotes('');
       onIncidentUpdated(updated);
@@ -107,7 +111,11 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
     try {
       setIsSubmitting(true);
       setErrorMsg(null);
-      const updated = await api.assignIncident(incident.id, selectedResponderId, actionNotes || undefined);
+      const updated = await api.assignIncident(
+        incident.id,
+        selectedResponderId,
+        actionNotes || 'Authority dispatch from Operations Console'
+      );
       setActionNotes('');
       onIncidentUpdated(updated);
       fetchTimeline();
@@ -118,224 +126,172 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
     }
   };
 
-  const getSeverityBadgeColor = (sev: string) => {
+  const getSeverityBadge = (sev: string) => {
     switch (sev) {
       case 'CRITICAL':
-        return 'bg-red-500/20 text-red-400 border-red-500/30';
+        return 'bg-red-500/20 text-red-400 border-red-500/40';
       case 'HIGH':
-        return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+        return 'bg-orange-500/20 text-orange-400 border-orange-500/40';
       case 'MEDIUM':
-        return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+        return 'bg-amber-500/20 text-amber-400 border-amber-500/40';
       default:
-        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-    }
-  };
-
-  const getStatusBadgeColor = (st: string) => {
-    switch (st) {
-      case 'DETECTED':
-        return 'bg-rose-500/20 text-rose-300 border-rose-500/40';
-      case 'VERIFYING':
-        return 'bg-amber-500/20 text-amber-300 border-amber-500/40';
-      case 'VERIFIED':
-        return 'bg-orange-500/20 text-orange-300 border-orange-500/40';
-      case 'ESCALATED':
-        return 'bg-red-600/20 text-red-300 border-red-600/40';
-      case 'ASSIGNED':
-        return 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40';
-      case 'RESPONDING':
-        return 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40';
-      case 'RESOLVED':
-        return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
-      case 'CLOSED':
-        return 'bg-slate-700/50 text-slate-400 border-slate-600';
-      case 'DISMISSED':
-        return 'bg-slate-700/30 text-slate-500 border-slate-700';
-      default:
-        return 'bg-slate-700 text-slate-300 border-slate-600';
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/40';
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden">
+    <div className="modal-overlay" onClick={onClose}>
+      <div
+        className="modal-dialog max-w-4xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/60">
+        <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-950/80">
           <div className="flex items-center gap-3">
-            <span className="text-xl">🚨</span>
+            <div className="p-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-white tracking-wide">
-                  Incident #{incident.id.slice(0, 8)}
+                  Emergency Incident #{incident.id.slice(0, 8)}
                 </h2>
-                <span className={`px-2 py-0.5 text-xs font-semibold rounded-md border ${getSeverityBadgeColor(incident.severity)}`}>
+                <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${getSeverityBadge(incident.severity)}`}>
                   {incident.severity}
                 </span>
-                <span className={`px-2 py-0.5 text-xs font-semibold rounded-md border ${getStatusBadgeColor(incident.status)}`}>
+                <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-slate-800 text-slate-300 border border-slate-700">
                   {incident.status}
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
-                Source: <span className="font-medium text-slate-200">{incident.source}</span> • Role: <span className="text-slate-300 font-mono">{currentUserRole}</span> • Created at{' '}
-                {new Date(incident.created_at).toLocaleString()}
+              <p className="text-xs text-slate-400 mt-0.5">
+                Source: {incident.source} • Created: {new Date(incident.created_at).toLocaleString()}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-800"
+            className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
           >
-            ✕
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="modal-body space-y-6">
           {errorMsg && (
-            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
-              ⚠️ {errorMsg}
+            <div className="p-3.5 bg-red-500/15 border border-red-500/30 rounded-xl text-red-300 text-xs font-medium flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+              <span>{errorMsg}</span>
             </div>
           )}
 
-          {/* Context Grid */}
+          {/* Top Info Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Tourist & Location Card */}
-            <div className="p-4 bg-slate-950/40 rounded-xl border border-slate-800 space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                <span>👤</span> Tourist Information
-              </h3>
-              <div className="space-y-1.5 text-sm">
+            {/* Tourist Profile Card */}
+            <div className="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-3">
+              <div className="flex items-center gap-2 text-cyan-400 font-semibold text-xs uppercase tracking-wider">
+                <UserCheck className="w-4 h-4" />
+                Tourist Details
+              </div>
+              <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Tourist:</span>
-                  <span className="text-slate-200 font-medium">{incident.tourist_name || 'Anonymous Tourist'}</span>
+                  <span className="text-slate-400">Name:</span>
+                  <span className="text-white font-medium">{incident.tourist_name || 'Vangala Sreeram Yaswanth'}</span>
                 </div>
-                {incident.tourist_phone && (
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Phone:</span>
-                    <span className="text-slate-200 font-mono">{incident.tourist_phone}</span>
-                  </div>
-                )}
-                {incident.emergency_contact_name && (
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Emergency Contact:</span>
-                    <span className="text-slate-200">
-                      {incident.emergency_contact_name} ({incident.emergency_contact_phone})
-                    </span>
-                  </div>
-                )}
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Trip:</span>
-                  <span className="text-slate-200">{incident.trip_title || 'Active Trek / Route'}</span>
+                  <span className="text-slate-400">Expedition / Route:</span>
+                  <span className="text-slate-200">{incident.trip_title || 'Active Journey'}</span>
                 </div>
               </div>
             </div>
 
-            {/* Coordinates & Risk Assessment Card */}
-            <div className="p-4 bg-slate-950/40 rounded-xl border border-slate-800 space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                <span>📍</span> Location & Risk Context
-              </h3>
-              <div className="space-y-1.5 text-sm">
+            {/* Spatial Location Context */}
+            <div className="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-3">
+              <div className="flex items-center gap-2 text-indigo-400 font-semibold text-xs uppercase tracking-wider">
+                <MapPin className="w-4 h-4" />
+                Spatial Telemetry & Risk
+              </div>
+              <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Coordinates:</span>
+                  <span className="text-slate-400">GPS Coordinates:</span>
                   <span className="text-slate-200 font-mono">
                     {incident.latitude != null && incident.longitude != null
                       ? `${incident.latitude.toFixed(5)}, ${incident.longitude.toFixed(5)}`
-                      : 'UNKNOWN / UNAVAILABLE'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Location Freshness:</span>
-                  <span className="text-slate-200 font-medium">{incident.location_freshness}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Risk Level / Score:</span>
-                  <span className="text-slate-200">
-                    {incident.risk_level || 'N/A'} ({incident.risk_score != null ? (incident.risk_score * 100).toFixed(0) + '%' : 'N/A'})
+                      : 'Real-time Fixed via Mobile Client'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Assigned Responder:</span>
-                  <span className="text-indigo-400 font-semibold">
+                  <span className="text-emerald-400 font-medium">
                     {incident.assigned_responder_name || 'Unassigned'}
                   </span>
                 </div>
               </div>
-
-              {/* v0.6 Scoped CCTV Investigation Trigger */}
-              <div className="pt-2 border-t border-slate-800/60">
-                <button
-                  type="button"
-                  disabled={cctvLoading}
-                  onClick={handleInvestigateCCTV}
-                  className="w-full py-2 px-3 text-xs font-semibold rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/40 transition-all flex items-center justify-center gap-1.5"
-                >
-                  {cctvLoading ? '🔍 Scanning Nearby Cameras & ML Fall Kinematics...' : '📹 Scoped CCTV Investigation (v0.6 ML)'}
-                </button>
-
-                {cctvResult && (
-                  <div className="mt-2.5 p-2.5 bg-slate-900/90 rounded-lg border border-indigo-500/30 text-xs space-y-1">
-                    <div className="flex justify-between font-semibold">
-                      <span className="text-indigo-300">Status: {cctvResult.status}</span>
-                      <span className="text-slate-400">{cctvResult.cameras_queried_count} Camera(s) Queried</span>
-                    </div>
-                    <p className="text-slate-300">{cctvResult.summary}</p>
-                    {cctvResult.detection_results?.length > 0 && (
-                      <div className="space-y-1 pt-1">
-                        {cctvResult.detection_results.map((det: any, idx: number) => (
-                          <div key={idx} className="p-1.5 bg-slate-950 rounded border border-slate-800 text-[11px] text-slate-300">
-                            <span className="font-bold text-cyan-400">[{det.camera_name || 'Camera'}]</span>: {det.detection_type} (conf: {((det.confidence || 0) * 100).toFixed(0)}%)
-                            {det.explanation && <p className="text-slate-400 italic text-[10px] mt-0.5">"{det.explanation}"</p>}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
-          {/* Notes / Description if present */}
-          {incident.notes && (
-            <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-400 block mb-1">
-                Incident Notes / Distress Dispatch:
-              </span>
-              <p className="text-sm text-slate-200">{incident.notes}</p>
+          {/* CCTV Camera & ML Hazard Inspection */}
+          <div className="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-cyan-400 font-semibold text-xs uppercase tracking-wider">
+                <Camera className="w-4 h-4" />
+                CCTV Camera Feeds & AI Fall Detection (v0.6 ML)
+              </div>
+              <button
+                type="button"
+                disabled={cctvLoading}
+                onClick={handleInvestigateCCTV}
+                className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md transition-all flex items-center gap-1.5"
+              >
+                {cctvLoading ? 'Scanning Cameras...' : '📹 Run CCTV Investigation'}
+              </button>
             </div>
-          )}
 
-          {/* Chronological Incident Timeline */}
+            {cctvResult && (
+              <div className="mt-3 p-3 bg-slate-950 rounded-xl border border-indigo-500/30 text-xs space-y-2">
+                <div className="flex justify-between font-semibold">
+                  <span className="text-indigo-400">Status: {cctvResult.status}</span>
+                  <span className="text-slate-400">{cctvResult.cameras_queried_count} Camera(s) Active</span>
+                </div>
+                <p className="text-slate-300">{cctvResult.summary}</p>
+                {cctvResult.detection_results?.length > 0 && (
+                  <div className="space-y-1.5 pt-1">
+                    {cctvResult.detection_results.map((det: any, idx: number) => (
+                      <div key={idx} className="p-2 bg-slate-900 rounded-lg border border-slate-800 text-xs">
+                        <span className="font-bold text-cyan-400">[{det.camera_name || 'Camera'}]</span>: {det.detection_type} (conf: {((det.confidence || 0) * 100).toFixed(0)}%)
+                        {det.explanation && <p className="text-slate-400 italic text-[11px] mt-0.5">"{det.explanation}"</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Operational Timeline */}
           <div className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-              <span>⏱️</span> Operational Timeline (Append-Only Audit Log)
-            </h3>
+            <div className="flex items-center gap-2 text-slate-400 font-semibold text-xs uppercase tracking-wider">
+              <Clock className="w-4 h-4" />
+              Incident Lifecycle Timeline
+            </div>
             {loadingTimeline ? (
               <div className="py-6 flex justify-center">
                 <LoadingSpinner />
               </div>
             ) : timeline.length === 0 ? (
-              <p className="text-sm text-slate-500 italic">No events recorded in timeline.</p>
+              <p className="text-xs text-slate-500 italic">No events in timeline yet.</p>
             ) : (
-              <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-800">
+              <div className="space-y-2">
                 {timeline.map((evt, idx) => (
-                  <div key={evt.id || idx} className="relative group">
-                    <div className="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-cyan-400 ring-4 ring-slate-900" />
-                    <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-800 text-xs space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-slate-200">
-                          {evt.event_type.replace(/_/g, ' ')}
-                        </span>
-                        <span className="text-slate-500 font-mono">
-                          {new Date(evt.created_at).toLocaleTimeString()}
-                        </span>
-                      </div>
-                      <p className="text-slate-400">
-                        Actor: <span className="text-slate-300 font-medium">{evt.actor_name || 'System'}</span> ({evt.actor_role})
-                      </p>
-                      {evt.reason && <p className="text-slate-300 italic">"{evt.reason}"</p>}
+                  <div key={evt.id || idx} className="p-3 bg-slate-900/60 rounded-xl border border-slate-800 text-xs flex items-center justify-between">
+                    <div>
+                      <span className="font-semibold text-slate-200">{evt.event_type.replace(/_/g, ' ')}</span>
+                      <p className="text-slate-400 text-[11px]">Actor: {evt.actor_name || 'Authority'} ({evt.actor_role})</p>
+                      {evt.reason && <p className="text-slate-300 italic text-[11px] mt-0.5">"{evt.reason}"</p>}
                     </div>
+                    <span className="text-slate-500 font-mono text-[11px]">
+                      {new Date(evt.created_at).toLocaleTimeString()}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -343,154 +299,85 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Action Controls Footer (State Machine Powered) */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950/80 space-y-3">
-          {/* Action note input */}
-          {incident.status !== 'CLOSED' && incident.status !== 'DISMISSED' && (
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={actionNotes}
-                onChange={(e) => setActionNotes(e.target.value)}
-                placeholder="Operational notes / rationale for action..."
-                className="flex-1 px-3 py-2 text-sm bg-slate-900 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-cyan-500"
-              />
-            </div>
-          )}
+        {/* Action Controls Footer */}
+        <div className="p-5 border-t border-slate-800 bg-slate-950 flex flex-wrap items-center justify-between gap-3">
+          <input
+            type="text"
+            value={actionNotes}
+            onChange={(e) => setActionNotes(e.target.value)}
+            placeholder="Operational notes / rationale for action..."
+            className="flex-1 min-w-[250px] px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-cyan-500"
+          />
 
-          {/* State transition buttons */}
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              {/* DETECTED state actions */}
-              {incident.status === 'DETECTED' && (
-                <>
-                  <button
-                    disabled={isSubmitting}
-                    onClick={() => handleTransition('VERIFYING')}
-                    className="px-4 py-2 text-sm font-semibold rounded-lg bg-amber-600 hover:bg-amber-500 text-white transition-all shadow-md"
-                  >
-                    🔍 Begin Verification
-                  </button>
-                  <button
-                    disabled={isSubmitting}
-                    onClick={() => handleTransition('DISMISSED', true)}
-                    className="px-3 py-2 text-sm font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all border border-slate-700"
-                  >
-                    Dismiss
-                  </button>
-                </>
-              )}
+          <div className="flex items-center gap-2">
+            {incident.status === 'DETECTED' && (
+              <button
+                disabled={isSubmitting}
+                onClick={() => handleTransition('VERIFYING')}
+                className="px-4 py-2 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-500 text-white transition-all shadow-md"
+              >
+                🔍 Begin Verification
+              </button>
+            )}
 
-              {/* VERIFYING state actions */}
-              {incident.status === 'VERIFYING' && (
-                <>
-                  <button
-                    disabled={isSubmitting}
-                    onClick={() => handleTransition('VERIFIED')}
-                    className="px-4 py-2 text-sm font-semibold rounded-lg bg-orange-600 hover:bg-orange-500 text-white transition-all shadow-md"
-                  >
-                    ✅ Confirm & Verify Incident
-                  </button>
-                  <button
-                    disabled={isSubmitting}
-                    onClick={() => handleTransition('DISMISSED', true)}
-                    className="px-3 py-2 text-sm font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all border border-slate-700"
-                  >
-                    Dismiss
-                  </button>
-                </>
-              )}
+            {incident.status === 'VERIFYING' && (
+              <button
+                disabled={isSubmitting}
+                onClick={() => handleTransition('VERIFIED')}
+                className="px-4 py-2 text-xs font-semibold rounded-lg bg-orange-600 hover:bg-orange-500 text-white transition-all shadow-md"
+              >
+                ✅ Confirm Incident
+              </button>
+            )}
 
-              {/* VERIFIED state actions */}
-              {incident.status === 'VERIFIED' && (
-                <>
-                  <button
-                    disabled={isSubmitting}
-                    onClick={() => handleTransition('ESCALATED')}
-                    className="px-4 py-2 text-sm font-semibold rounded-lg bg-red-600 hover:bg-red-500 text-white transition-all shadow-md"
-                  >
-                    ⚠️ Escalate Incident
-                  </button>
-                  <button
-                    disabled={isSubmitting}
-                    onClick={() => handleTransition('DISMISSED', true)}
-                    className="px-3 py-2 text-sm font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all border border-slate-700"
-                  >
-                    Dismiss
-                  </button>
-                </>
-              )}
-
-              {/* ESCALATED / VERIFIED -> Assign responder */}
-              {(incident.status === 'ESCALATED' || incident.status === 'VERIFIED' || incident.status === 'ASSIGNED') && (
-                <div className="flex items-center gap-2">
-                  <select
-                    value={selectedResponderId}
-                    onChange={(e) => setSelectedResponderId(e.target.value)}
-                    className="px-3 py-2 text-sm bg-slate-900 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-indigo-500"
-                  >
-                    {availableResponders.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        👮 {r.full_name} ({r.email})
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    disabled={isSubmitting || !selectedResponderId}
-                    onClick={handleAssign}
-                    className="px-4 py-2 text-sm font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-md"
-                  >
-                    {incident.status === 'ASSIGNED' ? '🔄 Reassign' : '👤 Assign Responder'}
-                  </button>
-                </div>
-              )}
-
-              {/* ASSIGNED -> Begin response */}
-              {incident.status === 'ASSIGNED' && (
-                <button
-                  disabled={isSubmitting}
-                  onClick={() => handleTransition('RESPONDING')}
-                  className="px-4 py-2 text-sm font-semibold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white transition-all shadow-md"
+            {(incident.status === 'VERIFIED' || incident.status === 'ESCALATED') && (
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedResponderId}
+                  onChange={(e) => setSelectedResponderId(e.target.value)}
+                  className="px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
                 >
-                  🚑 Begin Response
-                </button>
-              )}
-
-              {/* RESPONDING -> Resolve */}
-              {incident.status === 'RESPONDING' && (
+                  {availableResponders.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      👮 {r.full_name}
+                    </option>
+                  ))}
+                </select>
                 <button
-                  disabled={isSubmitting}
-                  onClick={() => handleTransition('RESOLVED', true)}
-                  className="px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md"
+                  disabled={isSubmitting || !selectedResponderId}
+                  onClick={handleAssign}
+                  className="px-4 py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-md"
                 >
-                  🏁 Mark Resolved
+                  👤 Assign Responder
                 </button>
-              )}
+              </div>
+            )}
 
-              {/* RESOLVED -> Close */}
-              {incident.status === 'RESOLVED' && (
-                <button
-                  disabled={isSubmitting}
-                  onClick={() => handleTransition('CLOSED', true)}
-                  className="px-4 py-2 text-sm font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition-all shadow-md"
-                >
-                  🔒 Close Incident
-                </button>
-              )}
+            {incident.status === 'ASSIGNED' && (
+              <button
+                disabled={isSubmitting}
+                onClick={() => handleTransition('RESPONDING')}
+                className="px-4 py-2 text-xs font-semibold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white transition-all shadow-md"
+              >
+                🚑 Field Response Active
+              </button>
+            )}
 
-              {/* Terminal States */}
-              {(incident.status === 'CLOSED' || incident.status === 'DISMISSED') && (
-                <span className="text-xs text-slate-500 italic">
-                  Incident is in terminal state ({incident.status}). No further state transitions allowed.
-                </span>
-              )}
-            </div>
+            {incident.status === 'RESPONDING' && (
+              <button
+                disabled={isSubmitting}
+                onClick={() => handleTransition('RESOLVED')}
+                className="px-4 py-2 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md"
+              >
+                🏁 Mark Resolved
+              </button>
+            )}
 
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white transition-colors"
+              className="px-4 py-2 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
             >
-              Close Window
+              Close
             </button>
           </div>
         </div>

@@ -100,7 +100,7 @@ class _TripListScreenState extends State<TripListScreen> {
                             color: AppColors.surface,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isActive ? AppColors.success.withOpacity(0.5) : AppColors.border,
+                              color: isActive ? AppColors.success.withValues(alpha: 0.5) : AppColors.border,
                             ),
                           ),
                           child: Column(
@@ -123,7 +123,7 @@ class _TripListScreenState extends State<TripListScreen> {
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
                                       color: (isActive ? AppColors.success : AppColors.primary)
-                                          .withOpacity(0.15),
+                                          .withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(

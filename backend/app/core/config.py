@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     DB_MAX_OVERFLOW: int = 20
     DB_POOL_TIMEOUT: int = 30
     DB_POOL_RECYCLE: int = 1800
+    MONGO_URI: str = "mongodb://localhost:27017/Kiroshi"
+    MONGO_DB_NAME: str = "Kiroshi"
 
     # Geospatial & Location Freshness
     LOCATION_FRESHNESS_LIVE_SECONDS: int = 30

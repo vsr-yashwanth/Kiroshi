@@ -166,7 +166,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(color: AppColors.textMuted, fontSize: 12),
               ),
               activeColor: AppColors.primary,
-              activeTrackColor: AppColors.primary.withOpacity(0.5),
+              activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 24),
             ElevatedButton(

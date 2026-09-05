@@ -51,6 +51,12 @@ class LocationTrackingService {
       return TrackingStatus.permissionDenied;
     }
 
+    // Explicitly check for granted or limited permission
+    if (permission == PermissionStatus.granted || permission == PermissionStatus.grantedLimited) {
+      return TrackingStatus.trackingEnabled;
+    }
+
+    // For any other case (shouldn't normally reach here but safe fallback)
     return TrackingStatus.trackingDisabled;
   }
 
@@ -59,8 +65,8 @@ class LocationTrackingService {
     required void Function(LocationPoint point) onLocationCaptured,
     required void Function(String error) onError,
   }) async {
-    _activeTripId = tripId;
-    await stopTracking();
+    await stopTracking();  // Clean up existing tracking first
+    _activeTripId = tripId;  // Then set the new trip ID
 
     await _location.changeSettings(
       accuracy: LocationAccuracy.high,
