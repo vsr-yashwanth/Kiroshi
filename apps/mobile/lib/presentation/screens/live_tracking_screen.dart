@@ -186,20 +186,22 @@ class LiveTrackingScreen extends StatelessWidget {
                               : AppColors.success,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
-                    onPressed: () {
-                      if (locationState.status == TrackingStatus.trackingEnabled) {
-                        locationState.stopTracking();
-                      } else {
-                        locationState.startTracking(trip.id);
-                      }
-                    },
-                    child: Text(
-                      locationState.status == TrackingStatus.trackingEnabled
-                          ? 'STOP GPS TRACKING'
-                          : 'ENABLE REAL-TIME TRACKING',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+                        onPressed: () {
+                          if (locationState.status == TrackingStatus.trackingEnabled) {
+                            locationState.stopTracking();
+                          } else {
+                            locationState.startTracking(trip.id);
+                          }
+                        },
+                        child: Text(
+                          locationState.status == TrackingStatus.trackingEnabled
+                              ? 'STOP GPS TRACKING'
+                              : 'ENABLE REAL-TIME TRACKING',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ],
