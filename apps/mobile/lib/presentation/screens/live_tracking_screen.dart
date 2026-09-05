@@ -131,9 +131,9 @@ class LiveTrackingScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: AppColors.border),
                       ),
-                      child: Row(
+                      child: const Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children: [
                           Icon(Icons.shield_outlined, color: AppColors.success, size: 20),
                           SizedBox(width: 10),
                           Expanded(
