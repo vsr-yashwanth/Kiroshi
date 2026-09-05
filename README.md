@@ -173,8 +173,8 @@ Key principles:
 - [x] **v0.1.0 — Core Platform**: Authentication, Profiles, Trip Management, Authority Inspection.
 - [x] **v0.2.0 — Real-Time Geospatial**: PostGIS spatial queries, location ingestion, WebSockets, live map.
 - [x] **v0.3.0 — Risk Engine**: Multi-signal anomaly detection, route deviation, safety scoring.
-- [ ] **v0.4.0 — Emergency Response**: SOS verification, incident assignment, responder coordination.
-- [ ] **v0.5.0 — Offline-First**: Local event queue, offline SOS, store-and-forward sync.
+- [x] **v0.4.0 — Emergency Response**: SOS verification, incident assignment, responder coordination.
+- [x] **v0.5.0 — Offline-First**: Local event queue, offline SOS, store-and-forward sync.
 - [ ] **v0.6.0 — Computer Vision**: Edge fall detection, CCTV search window assistance.
 - [ ] **v0.7.0 — Audit & Trust**: Cryptographic tamper-evident incident logging.
 - [ ] **v1.0.0 — Production Release**: Penetration testing, load benchmarking, multi-region hardening.
