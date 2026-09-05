@@ -19,8 +19,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   final _lngController = TextEditingController();
 
   final List<ItineraryModel> _waypoints = [];
-  DateTime _startDate = DateTime.now().add(const Duration(days: 1));
-  DateTime _endDate = DateTime.now().add(const Duration(days: 5));
+  final DateTime _startDate = DateTime.now().add(const Duration(days: 1));
+  final DateTime _endDate = DateTime.now().add(const Duration(days: 5));
   bool _isSubmitting = false;
 
   @override

@@ -54,9 +54,10 @@ class _TripListScreenState extends State<TripListScreen> {
           IconButton(
             icon: const Icon(Icons.logout, color: AppColors.textMuted),
             onPressed: () async {
+              final nav = Navigator.of(context);
               await authState.logout();
               if (mounted) {
-                Navigator.of(context).pushAndRemoveUntil(
+                nav.pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const LoginScreen()),
                   (route) => false,
                 );
