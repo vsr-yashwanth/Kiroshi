@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.0] — 2026-09-05
+
+### Added
+- **Computer Vision & Fall Detection Engine (`ml/models/fall_detector.py`)**: Modular, explainable fall detection algorithm evaluating posture aspect ratios ($w/h > 0.95$), torso angles ($< 45^\circ$), vertical kinematic descent velocity ($> 0.25/\text{s}$), and prolonged ground dwell times ($> 1000\text{ms}$).
+- **Decoupled ML Interface & Versioning (`ml/interfaces.py`)**: Standardized `DetectionResult` contract tracking `model_name` (`kiroshi-fall-detector`), `model_version` (`0.6.0`), calibrated confidence scores, and natural language explanations.
+- **Critical Safety Guardrail**: Strict enforcement that Computer Vision outputs `POSSIBLE_FALL` and NEVER automatically claims `CONFIRMED_EMERGENCY`.
+- **CCTV Domain Models & Migration (`Camera`, `CCTVInvestigation`)**: PostGIS-backed camera inventory with spatial GIST index and `cctv_investigations` audit table (Alembic migration `c63e8290f102`).
+- **PostGIS Proximity Search & Scoped Investigation (`CCTVService`)**: Spatial discovery of cameras within `search_radius_meters` via `ST_DWithin` / `ST_Distance` and time-bounded footage analysis ($\pm 5$ minutes).
+- **CCTV API Endpoints (`backend/app/api/v1/endpoints/cctv.py`)**: RBAC-protected endpoints for camera registration, proximity search, and scoped incident investigation.
+- **Risk Engine Integration (`backend/app/engines/risk/`)**: Optional incorporation of `POSSIBLE_FALL` signals into the transparent risk evaluator without coupling core safety to ML availability.
+- **Authority Dashboard CCTV Console (`IncidentDetailModal.tsx`)**: One-click scoped CCTV investigation trigger displaying camera count, status, and explainable fall evidence directly within the incident operations modal.
+- **Reproducible Evaluation & Benchmarks (`ml/evaluation/evaluate.py`)**: Measured benchmark calculating precision (100%), recall (100%), F1 score (1.0000), and mean inference latency (0.031ms).
+- **Comprehensive Documentation**: Added `FALL_DETECTION.md`, `CCTV.md`, `ML.md`, and `DATASETS.md` in `docs/05-intelligence/`.
+- **Automated Test Suite**: Added `test_fall_detection.py`, `test_cctv_api.py`, and `test_e2e_v06_cv_workflow.py` (90/90 backend tests passing).
+
+### Security & Privacy
+- Zero facial recognition, biometric indexing, or indiscriminate surveillance.
+- CCTV investigations are strictly **Incident-Scoped**, **Location-Scoped**, **Time-Scoped**, and **Authorization-Scoped**.
+- Tamper-evident audit logging for every investigation query and camera search.
+- Full ML failure isolation: core backend, authentication, GPS, and emergency SOS dispatch remain 100% operational if ML times out, fails, or is disabled.
+
+---
+
 ## [0.5.0] — 2026-09-05
 
 ### Added

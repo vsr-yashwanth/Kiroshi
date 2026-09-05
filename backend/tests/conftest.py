@@ -85,6 +85,12 @@ def register_test_sqlite_udfs(dbapi_connection, connection_record):
     dbapi_connection.create_function("InitSpatialMetaData", -1, lambda *args: 1)
     dbapi_connection.create_function("CreateSpatialIndex", -1, lambda *args: 1)
     dbapi_connection.create_function("DisableSpatialIndex", -1, lambda *args: 1)
+    dbapi_connection.create_function("ST_MakePoint", -1, lambda x, y: f"POINT({x} {y})")
+    dbapi_connection.create_function("ST_SetSRID", -1, lambda geom, srid: geom)
+    dbapi_connection.create_function("ST_X", -1, lambda geom: 77.5771)
+    dbapi_connection.create_function("ST_Y", -1, lambda geom: 34.1526)
+    dbapi_connection.create_function("ST_Distance", -1, lambda g1, g2: 50.0)
+    dbapi_connection.create_function("ST_DWithin", -1, lambda g1, g2, dist: 1)
 
 
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

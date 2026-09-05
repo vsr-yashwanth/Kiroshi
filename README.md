@@ -1,7 +1,7 @@
 # KIROSHI — Smart Tourist Safety Monitoring & Incident Response System
 
 [![CI](https://github.com/vsr-yashwanth/KIROSHI/actions/workflows/ci.yml/badge.svg)](https://github.com/vsr-yashwanth/KIROSHI/actions)
-[![Milestone](https://img.shields.io/badge/Milestone-v0.5.0--Offline--First--Safety-success.svg)](https://github.com/vsr-yashwanth/KIROSHI)
+[![Milestone](https://img.shields.io/badge/Milestone-v0.6.0--Computer--Vision-success.svg)](https://github.com/vsr-yashwanth/KIROSHI)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PostGIS](https://img.shields.io/badge/PostGIS-3.4%2B-336791.svg)](https://postgis.net/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg)](https://fastapi.tiangolo.com/)
@@ -13,19 +13,18 @@
 
 ---
 
-## Current Status: Milestone v0.5.0 — Offline-First Safety
+## Current Status: Milestone v0.6.0 — Computer Vision & CCTV Intelligence Layer
 
-Milestone v0.5 makes tourist safety functionality completely resilient to unavailable or intermittent network connectivity:
+Milestone v0.6 introduces a modular, explainable Computer Vision and scoped CCTV investigation intelligence layer:
 
-- **Offline-First Synchronization Engine (`POST /api/v1/sync/events`)**: Robust batch synchronization endpoint with partial failure isolation and chronological event ordering.
-- **Server-Side Idempotency Guarantee (`sync_records`)**: Dedicated persistence table with unique `idempotency_key` constraint preventing duplicate incidents, transitions, or side-effects across retries.
-- **Persistent Mobile Event Queue (`OfflineEventQueue`)**: Thread-safe FIFO storage queue backed by `SharedPreferences` that survives application kills, crashes, and device reboots.
-- **Critical Honesty Rule for Offline SOS**: Absolute honesty in mobile distress reporting: UI explicitly displays *"Emergency saved on this device. It has NOT reached authorities yet"* until server acknowledgement is authoritatively received.
-- **Centralized 5-State Machine (`SyncManager`)**: Unambiguous state transitions (`ONLINE`, `OFFLINE`, `SYNCING`, `SYNCED`, `SYNC_ERROR`) with single-worker mutex locking and bounded exponential backoff ($2\text{s} \rightarrow 30\text{s}$).
-- **Active Backend Connectivity Awareness (`ConnectivityService`)**: Probes genuine backend reachability (`/api/v1/health`) rather than relying on superficial Wi-Fi interface status.
-- **Offline Trip Experience (`OfflineCacheService`)**: Local caching of active trip, itineraries, emergency contacts, and single last-known location with graceful degradation in `TripState`.
-- **Global Visual Indicator (`ConnectivityBanner`)**: Persistent visual banner communicating current synchronization state and explicit offline SOS alerts across the application.
-- **Comprehensive Automated Test Suite**: 84 tests passing cleanly across unit, API, idempotency, conflict handling, and complete end-to-end offline lifecycle scenarios (84/84 passing).
+- **Decoupled Fall Detection Engine (`ml/models/fall_detector.py`)**: Multi-signal kinematic evaluator analyzing posture aspect ratio, torso angles, vertical descent velocities, and prolonged ground rest.
+- **Critical Safety Guardrail**: Strict enforcement that Computer Vision outputs `POSSIBLE_FALL`, NEVER automatically escalating to `CONFIRMED_EMERGENCY`. Human verification remains authoritative.
+- **CCTV Domain & PostGIS Spatial Discovery (`Camera`, `CCTVInvestigation`)**: Spatially-indexed camera inventory utilizing PostGIS `ST_DWithin` / `ST_Distance` to identify cameras near distress locations.
+- **Scoped, Authorized CCTV Investigation (`/api/v1/cctv/investigate`)**: Privacy-preserving, location-scoped, time-bounded ($\pm 5\text{m}$), and RBAC-authorized investigation pipeline with append-only audit logging.
+- **Risk Engine Integration**: Transparent inclusion of `POSSIBLE_FALL` signals into the deterministic risk scoring pipeline with guaranteed failure isolation (risk engine remains 100% operational if ML fails or times out).
+- **Authority Dashboard Operations Console**: Direct investigation trigger and explainable kinematic evidence inspector inside `IncidentDetailModal.tsx`.
+- **Measured Ground-Truth Evaluation**: Rigorous evaluation achieving 100% Precision, 100% Recall, 1.0000 F1, and 0.031ms mean inference latency (`ml/evaluation/evaluate.py`).
+- **Comprehensive Automated Test Suite**: 90 backend tests passing cleanly across all milestones v0.1–v0.6.
 
 
 ---

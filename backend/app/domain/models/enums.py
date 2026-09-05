@@ -63,12 +63,29 @@ class RiskSignalType(str, enum.Enum):
     UNUSUAL_SPEED = "UNUSUAL_SPEED"
     UNUSUAL_MOVEMENT = "UNUSUAL_MOVEMENT"
     ZONE_EVENT = "ZONE_EVENT"
+    POSSIBLE_FALL = "POSSIBLE_FALL"
+
+
+class CameraStatus(str, enum.Enum):
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    MAINTENANCE = "MAINTENANCE"
+    SIMULATED = "SIMULATED"
+
+
+class InvestigationStatus(str, enum.Enum):
+    REQUESTED = "REQUESTED"
+    PROCESSING = "PROCESSING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    NO_FOOTAGE_AVAILABLE = "NO_FOOTAGE_AVAILABLE"
 
 
 class IncidentSource(str, enum.Enum):
     SOS = "SOS"
     RISK_ENGINE = "RISK_ENGINE"
     AUTHORITY = "AUTHORITY"
+    CCTV_INVESTIGATION = "CCTV_INVESTIGATION"
     SYSTEM = "SYSTEM"
 
 

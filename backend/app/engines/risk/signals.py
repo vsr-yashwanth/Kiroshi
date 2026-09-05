@@ -339,3 +339,26 @@ class ZoneEventSignalEvaluator:
             )
 
         return None
+
+
+class FallDetectionSignalEvaluator:
+    """Evaluates optional Computer Vision fall signals (e.g. POSSIBLE_FALL detection)."""
+
+    @staticmethod
+    def evaluate(cv_detection: Optional[Dict[str, Any]]) -> Optional[SignalResult]:
+        if not cv_detection:
+            return None
+
+        detection_type = cv_detection.get("detection_type")
+        confidence = float(cv_detection.get("confidence", 0.0))
+
+        if detection_type == "POSSIBLE_FALL" and confidence >= 0.65:
+            return SignalResult(
+                signal_type=RiskSignalType.POSSIBLE_FALL,
+                score=round(confidence, 2),
+                weight=0.25,
+                raw_value=f"POSSIBLE_FALL ({confidence:.2f})",
+                unit="confidence",
+                description=f"Computer Vision detected kinematics consistent with a possible fall (confidence: {confidence:.2f}).",
+            )
+        return None
